@@ -6,6 +6,8 @@ import org.osgi.framework.BundleContext;
 public class Activator implements BundleActivator {
 
 	private static BundleContext context;
+	
+	AicasTxtCommonJNIDriver driver = new AicasTxtCommonJNIDriver();
 
 	static BundleContext getContext() {
 		return context;
@@ -17,6 +19,8 @@ public class Activator implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
+		
+		
 	}
 
 	/*
