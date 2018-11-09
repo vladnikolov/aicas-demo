@@ -19,6 +19,8 @@ FISH_X1_TRANSFER    *pTArea = 0;
 
 pthread_mutex_t mutexMotor;
 
+#define DEBUG 1
+
 
 /* Class:     com.aicas.fischertechnik.driver.AicasTxtCommonJNIDriver
  * Method:    initTxt
@@ -34,17 +36,17 @@ Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env
 	  // start the integrated IO thread within the TXT library
 	  if ((ret = StartTxtDownloadProg()) == KELIB_ERROR_NONE)
 	  {
-		  printf("TXT library successfully initialized");
+		  printf("TXT library successfully initialized\n");
           pTArea = GetKeLibTransferAreaMainAddress();
           if(!pTArea)
           {
-    		  fprintf(stderr, "Error: could not acquire transfer area");
+    		  fprintf(stderr, "Error: could not acquire transfer area\n");
     		  ret = -1;
           }
 	  }
 	  else
 	  {
-		  fprintf(stderr,"Error: could not initialize TXT library");
+		  fprintf(stderr,"Error: could not initialize TXT library\n");
 	  }
 
 	  return (jint) ret;
@@ -72,13 +74,17 @@ JNIEXPORT jint JNICALL
 Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, jobject t,
 		jint id, jint direction, jint speed, jint distance)
 {
+
+#ifdef DEBUG
+	printf("AicasTxtJNIDriver: moving motor %d, direction=%d, speed=%d, distance=%d\n",
+			id, direction, speed, distance);
+#endif
 	pthread_mutex_lock(&mutexMotor);
 
 	// Motor M1 is controlled by output contacts O1 [0] and O2 [1]
 	// Motor M2 is controlled by output contacts O3 [2] and O4 [3]
 	// ...
 	// Motor MX is controlled by output contacts OX-1 [X * 2 - 2] and OX [X * 2 - 1]
-
 	pTArea->ftX1out.distance[id * 2 - 2] = distance;         // Distance to drive Motor id
 	pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2]++;			// Set new Distance Value for Motor id
 	if (direction)
@@ -92,10 +98,24 @@ Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv 
 		pTArea->ftX1out.duty[id * 2 - 1] = speed;           // Switch Motor id ( O2 [1] ) with minus
 	}
 
-	while (pTArea->ftX1in.motor_ex_cmd_id[0] < pTArea->ftX1out.motor_ex_cmd_id[0])
+#ifdef DEBUG
+	printf("AicasTxtJNIDriver: motor %d, command-counter-out=%d, command-counter-in=%d\n",
+					id, pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2], pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2]);
+#endif
+
+	while (pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2] < pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2])
 	{
 		// wait until motor has reached destination
+#ifdef DEBUG
+		printf("AicasTxtJNIDriver: waiting for motor move to finish\n");
+		pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2]++;
+		printf("AicasTxtJNIDriver: motor %d, command-counter-out=%d, command-counter-in=%d\n",
+				id, pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2], pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2]);
+
+#endif
 	}
+
+	printf("AicasTxtJNIDriver: motor %d ready\n", id);
 
 	pthread_mutex_unlock(&mutexMotor);
 

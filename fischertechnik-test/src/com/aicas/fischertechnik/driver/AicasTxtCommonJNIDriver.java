@@ -3,7 +3,7 @@ package com.aicas.fischertechnik.driver;
 public class AicasTxtCommonJNIDriver
 {
     static {
-        System.loadLibrary("aicastxtcommonjnidriver");
+        System.loadLibrary("AicasTxtCommonJNIDriver");
     }
     
     /**
