@@ -2,15 +2,19 @@ package com.aicas.fischertechnik.driver;
 
 public class AicasTxtCommonJNIDriver
 {
+    static {
+        System.loadLibrary("aicastxtcommonjnidriver");
+    }
+    
     /**
      * initializes the native TXT libraries
      */
-    public native void initialize();
+    public native int initTxt();
     
     /**
      * uninitializes the native TXT libraries
      */    
-    public native void uninitialize();
+    public native int uninitTxt();
     
     /***
      * Rotates a TXT motor with <code>id</code> for a certain <code>distance</code> 
@@ -20,7 +24,8 @@ public class AicasTxtCommonJNIDriver
      * @param direction - a positive or a negative number determines the direction
      * @param speed - motor speed can be a value between 0 .. 512
      * @param distance - given in cycles with 1x cycle = 63, 2x cycles = 127, etc.
+     * @return - the number of steps performed by the motor
      */
-    public native void rotateMotor(int id, int direction, int speed, int distance);
+    public native int rotateMotor(int id, int direction, int speed, int distance);
     
 }
