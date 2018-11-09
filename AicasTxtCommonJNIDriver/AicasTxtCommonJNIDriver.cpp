@@ -69,11 +69,9 @@ Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_uninitTxt(JNIEnv *e
   extern "C"
 #endif
 JNIEXPORT jint JNICALL
-JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, jobject t,
-		jint id, jint direction, jint speed, jint distance);
+Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, jobject t,
+		jint id, jint direction, jint speed, jint distance)
 {
-	int ret;
-
 	pthread_mutex_lock(&mutexMotor);
 
 	// Motor M1 is controlled by output contacts O1 [0] and O2 [1]
@@ -81,16 +79,16 @@ JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDri
 	// ...
 	// Motor MX is controlled by output contacts OX-1 [X * 2 - 2] and OX [X * 2 - 1]
 
-	pTArea->ftX1out.distance[id * 2 - 2] = distance         // Distance to drive Motor id
+	pTArea->ftX1out.distance[id * 2 - 2] = distance;         // Distance to drive Motor id
 	pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2]++;			// Set new Distance Value for Motor id
 	if (direction)
 	{
-		pTArea->ftX1out.duty[id * 2 - 2] = speed			// Switch Motor id ( O1 [0] ) on with PWM Value 512 (= max speed)
-		pTArea->ftX1out.duty[id * 2 - 1] = 0				// Switch Motor id ( O2 [1] ) with minus
+		pTArea->ftX1out.duty[id * 2 - 2] = speed;			// Switch Motor id ( O1 [0] ) on with PWM Value 512 (= max speed)
+		pTArea->ftX1out.duty[id * 2 - 1] = 0;   			// Switch Motor id ( O2 [1] ) with minus
 	}
 	else
 	{
-		pTArea->ftX1out.duty[id * 2 - 2] = 0				// Switch Motor id ( O1 [0] ) on with PWM Value 512 (= max speed)
+		pTArea->ftX1out.duty[id * 2 - 2] = 0;				// Switch Motor id ( O1 [0] ) on with PWM Value 512 (= max speed)
 		pTArea->ftX1out.duty[id * 2 - 1] = speed;           // Switch Motor id ( O2 [1] ) with minus
 	}
 
@@ -100,4 +98,6 @@ JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDri
 	}
 
 	pthread_mutex_unlock(&mutexMotor);
+
+	return (jint) 0;
 }

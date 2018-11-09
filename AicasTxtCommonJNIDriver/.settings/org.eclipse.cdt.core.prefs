@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1166445172/PATH/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1166445172/PATH/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1166445172/PATH/value=/usr/local/tools/cross/linux/arm/gcc-linaro-5.3-2016.02-x86_64_arm-linux-gnueabihf/bin\:/tools/bin\:/usr/java/default/bin\:/tools/bin\:/usr/java/default/bin\:/usr/lib64/qt-3.3/bin\:/local-home/nikolov/perl5/bin\:/usr/local/bin\:/usr/local/sbin\:/usr/bin\:/usr/sbin\:/bin\:/sbin\:/opt/puppetlabs/bin
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1166445172/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1166445172/appendContributed=true
