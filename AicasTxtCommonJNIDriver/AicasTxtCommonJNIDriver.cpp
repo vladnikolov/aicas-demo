@@ -29,7 +29,7 @@ pthread_mutex_t mutexMotor;
   extern "C"
 #endif
 JNIEXPORT jint JNICALL
-Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env, jobject t)
+Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env, jobject t)
 {
 	  int ret;
 
@@ -59,7 +59,7 @@ Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env
   extern "C"
 #endif
 JNIEXPORT jint JNICALL
-Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_uninitTxt(JNIEnv *env, jobject t)
+Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_uninitTxt(JNIEnv *env, jobject t)
 {
 	  return (jint) StopTxtDownloadProg();
 }
@@ -71,7 +71,7 @@ Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_uninitTxt(JNIEnv *e
   extern "C"
 #endif
 JNIEXPORT jint JNICALL
-Java_com_aicas_fischertechnik_driver_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, jobject t,
+Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, jobject t,
 		jint id, jint direction, jint speed, jint distance)
 {
 

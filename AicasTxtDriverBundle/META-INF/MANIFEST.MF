@@ -7,4 +7,4 @@ Bundle-Activator: com.aicas.fischertechnik.Activator
 Import-Package: org.osgi.framework;version="1.3.0"
 Export-Package: com.aicas.fischertechnik.driver
 Automatic-Module-Name: AicasTxtDriverBundle
-Bundle-NativeCode: lib/libAicasTxtCommonJNIDriver
+Bundle-NativeCode: lib/libAicasTxtCommonJNIDriver.so
