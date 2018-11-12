@@ -1,2 +1,2 @@
 # aicas-demo
-Fischertechnik Demo based on aicas Software
+Fischertechnik Demo based on aicas Software.
