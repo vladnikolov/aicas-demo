@@ -12,6 +12,10 @@ public interface AicasTxtDriverInterface
      */  
     public int uninitTxt();
     
+    public int readInput(int id);
+    
+    public boolean writeOutput(int id, int value);
+    
     /***
      * Rotates a TXT motor with <code>id</code> for a certain <code>distance</code> 
      * and with a certain <code>speed</code>.
@@ -23,4 +27,28 @@ public interface AicasTxtDriverInterface
      * @return - the number of steps performed by the motor
      */
     public int rotateMotor(int id, int direction, int speed, int distance);
+    
+    public enum LightBarrier {
+        COLORSENSOR, EJECTION, WHITE, RED, BLUE 
+    };
+    
+    /**
+     * Gets the actual state of a light barrier.
+     * 
+     * @param an instance of type {@link LightBarrier}
+     * @return a boolean value with, true = on and false = off
+     */    
+    boolean getLightBarrierState(LightBarrier lightBarrier);
+    
+    int getColorSensorValue();
+    
+    int getImpulseSamplerValue();
+    
+    public enum Valve {
+      WHITE, RED, BLUE  
+    };
+    
+    boolean activateValve(Valve valve);
+    
+    boolean activateCompressor();    
 }
