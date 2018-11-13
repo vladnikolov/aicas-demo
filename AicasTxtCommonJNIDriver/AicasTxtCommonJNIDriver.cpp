@@ -172,6 +172,7 @@ JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rea
 		return -1;
 	}
 
+	// we still do not know how to read the C1
 	// return (jint) pTArea->ftX1config.uni[id-1];
 	return -1;
 }
