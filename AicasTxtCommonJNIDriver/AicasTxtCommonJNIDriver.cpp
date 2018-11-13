@@ -135,7 +135,7 @@ JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rea
 		return -1;
 	}
 
-	return (jint) pTArea->ftX1in[id-1];
+	return (jint) pTArea->ftX1in.uni[id-1];
 }
 
 /* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
@@ -155,7 +155,8 @@ JNIEXPORT jboolean JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver
 	printf("AicasTxtJNIDriver: writeOutput(%d,%d)\n", id, value);
 #endif
 
-	return (jint) pTArea->ftX1out[id-1] = value;
+	pTArea->ftX1out.duty[id-1] = value;
+	return true;
 }
 
 /* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
@@ -171,5 +172,6 @@ JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rea
 		return -1;
 	}
 
-	return (jint) pTArea->ftX1config[id-1];
+	// return (jint) pTArea->ftX1config.uni[id-1];
+	return -1;
 }
