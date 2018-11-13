@@ -49,7 +49,40 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env, jobje
 		  fprintf(stderr,"Error: could not initialize TXT library\n");
 	  }
 
-	  return (jint) ret;
+	pTArea->ftX1config.uni[0].mode = MODE_U;
+	pTArea->ftX1config.uni[0].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[1].mode = MODE_U;
+	pTArea->ftX1config.uni[1].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[2].mode = MODE_U;
+	pTArea->ftX1config.uni[2].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[3].mode = MODE_U;
+	pTArea->ftX1config.uni[3].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[4].mode = MODE_U;
+	pTArea->ftX1config.uni[4].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[5].mode = MODE_U;
+	pTArea->ftX1config.uni[5].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[6].mode = MODE_U;
+	pTArea->ftX1config.uni[6].digital = 0;
+	pTArea->ftX1state.config_id++;
+
+#ifdef DEBUG
+	printf("AicasTxtJNIDriver: transfer area address %x\n", pTArea);
+#endif
+
+
+	return (jint) ret;
 }
 
   /* Class:     com.aicas.fischertechnik.driver.AicasTxtCommonJNIDriver

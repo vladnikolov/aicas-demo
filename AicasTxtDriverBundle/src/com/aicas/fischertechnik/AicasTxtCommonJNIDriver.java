@@ -22,15 +22,15 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     {
         switch(lightBarrier) {
         case COLORSENSOR:
-            return (readInput(1) > 0) ? true : false; 
+            return (readInput(1) != 0) ? true : false; 
         case EJECTION:
-            return (readInput(3) > 0) ? true : false;
+            return (readInput(3) != 0) ? true : false;
         case WHITE:
-            return (readInput(4) > 0) ? true : false;
+            return (readInput(4) != 0) ? true : false;
         case RED:
-            return (readInput(5) > 0) ? true : false;
+            return (readInput(5) != 0) ? true : false;
         case BLUE:
-            return (readInput(6) > 0) ? true : false;
+            return (readInput(6) != 0) ? true : false;
         }
         
         return false;
