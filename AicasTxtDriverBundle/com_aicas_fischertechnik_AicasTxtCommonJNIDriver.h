@@ -36,6 +36,33 @@ JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_uni
 #endif
 JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, jobject t, jint v0, jint v1, jint v2, jint v3);
 
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    readInput
+ * Signature: (I)I */
+#ifdef __cplusplus
+  extern "C"
+#endif
+JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readInput(JNIEnv *env, jobject t, jint v0);
+
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    writeOutput
+ * Signature: (II)Z */
+#ifdef __cplusplus
+  extern "C"
+#endif
+JNIEXPORT jboolean JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_writeOutput(JNIEnv *env, jobject t, jint v0, jint v1);
+
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    readControlRegister
+ * Signature: (I)I */
+#ifdef __cplusplus
+  extern "C"
+#endif
+JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readControlRegister(JNIEnv *env, jobject t, jint v0);
+
 #ifdef __cplusplus
 }
 #endif

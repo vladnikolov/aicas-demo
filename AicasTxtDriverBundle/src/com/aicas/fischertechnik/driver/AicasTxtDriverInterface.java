@@ -3,17 +3,30 @@ package com.aicas.fischertechnik.driver;
 public interface AicasTxtDriverInterface
 {
     /**
-     * initializes the native TXT libraries
+     * Initialize the native TXT libraries.
+     * @return 
      */
     public int initTxt();
     
     /**
-     * uninitializes the native TXT libraries
+     * Uninitialize the native TXT libraries.
+     * @return
      */  
     public int uninitTxt();
     
+    /**
+     * Read input with <code>id</code> directly.
+     * @param id - the input id as specified on the TXT
+     * @return the actual value of the input.
+     */
     public int readInput(int id);
     
+    /**
+     * Write directly to output <code>id</code>
+     * @param id - the output id
+     * @param value - the value to be written
+     * @return 
+     */
     public boolean writeOutput(int id, int value);
     
     /***
@@ -28,6 +41,9 @@ public interface AicasTxtDriverInterface
      */
     public int rotateMotor(int id, int direction, int speed, int distance);
     
+    /**
+     * Light barrier enumeration for identification.
+     */
     public enum LightBarrier {
         COLORSENSOR, EJECTION, WHITE, RED, BLUE 
     };
@@ -40,15 +56,35 @@ public interface AicasTxtDriverInterface
      */    
     boolean getLightBarrierState(LightBarrier lightBarrier);
     
+    /**
+     * Get the actual measured value of the color sensor.
+     * @return - an integer representation of the color value as RGB.
+     */
     int getColorSensorValue();
     
+    /**
+     * Gets the actual impulse sampler value attached to motor 01.
+     * @return
+     */
     int getImpulseSamplerValue();
     
+    /**
+     * Valve enumeration for identification.
+     */
     public enum Valve {
       WHITE, RED, BLUE  
     };
     
+    /**
+     * Activates a certain valve.
+     * @param valve
+     * @return true on success, otherwise false.
+     */
     boolean activateValve(Valve valve);
     
+    /**
+     * Activates the compressor.
+     * @return
+     */
     boolean activateCompressor();    
 }

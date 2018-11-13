@@ -121,3 +121,55 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, j
 
 	return (jint) 0;
 }
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    readInput
+ * Signature: (I)I */
+#ifdef __cplusplus
+extern "C"
+#endif
+JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readInput(
+		JNIEnv *env, jobject t, jint id) {
+	if (id < 1 || id > 8) {
+		fprintf(stderr, "AicasTxtCommonJNIDriver: readInput(%d) - wrong input index (1..8)", id);
+		return -1;
+	}
+
+	return (jint) pTArea->ftX1in[id-1];
+}
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    writeOutput
+ * Signature: (II)Z */
+#ifdef __cplusplus
+extern "C"
+#endif
+JNIEXPORT jboolean JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_writeOutput(
+		JNIEnv *env, jobject t, jint id, jint value) {
+	if (id < 1 || id > 8) {
+		fprintf(stderr, "AicasTxtCommonJNIDriver: writeOutput(%d, %d) - wrong output index (1..8)", id, value);
+		return -1;
+	}
+
+#ifdef DEBUG
+	printf("AicasTxtJNIDriver: writeOutput(%d,%d)\n", id, value);
+#endif
+
+	return (jint) pTArea->ftX1out[id-1] = value;
+}
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    readControlRegister
+ * Signature: (I)I */
+#ifdef __cplusplus
+extern "C"
+#endif
+JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readControlRegister(
+		JNIEnv *env, jobject t, jint id) {
+	if (id < 1 || id > 4) {
+		fprintf(stderr, "AicasTxtCommonJNIDriver: readControlRegister(%d) - wrong input index (1..8)", id);
+		return -1;
+	}
+
+	return (jint) pTArea->ftX1config[id-1];
+}

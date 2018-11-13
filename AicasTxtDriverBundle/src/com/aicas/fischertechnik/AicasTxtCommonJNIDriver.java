@@ -36,8 +36,10 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
         return false;
     }
     
+    @Override
     public native int readInput(int id);
     
+    @Override
     public native boolean writeOutput(int id, int value);
 
     @Override
