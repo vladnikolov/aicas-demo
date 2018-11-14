@@ -60,7 +60,7 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     @Override
     public void resetMotorCounter()
     {
-        
+        resetImpulseSamplerCounter();
     }
     
     private native int readImpulseSamplerCounter();
@@ -72,11 +72,11 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     {
         switch(valve) {
         case WHITE:
-            return writeOutput(5, 1);
+            return writeOutput(5, 512);
         case RED:
-            return writeOutput(6, 1);
+            return writeOutput(6, 512);
         case BLUE:
-            return writeOutput(7, 1);
+            return writeOutput(7, 512);
         }        
         return false;
     }
@@ -84,6 +84,6 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     @Override
     public boolean activateCompressor()
     {
-        return writeOutput(8, 1);
+        return writeOutput(8, 512);
     }
 }

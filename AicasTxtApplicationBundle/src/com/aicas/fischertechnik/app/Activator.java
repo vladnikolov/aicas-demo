@@ -55,7 +55,7 @@ public class Activator implements BundleActivator
                     System.out.println("AicasTxtApplication: trying to rotate TXT motor 1");
 
                     // this is an example how we should use the motor for the sorting machine
-                    // instead of: driverService.rotateMotor(1, 1, 512, 127);
+                    // deprecated: driverService.rotateMotor(1, 1, 512, 127);
                     
                     
                     // get the actual Motor Counter value
@@ -77,7 +77,7 @@ public class Activator implements BundleActivator
                         e1.printStackTrace();
                     }
                     
-                    System.out.println("AicasTxtApplication: trying to rotate TXT motor in opposite direction");
+                    System.out.println("AicasTxtApplication: rotating TXT motor in opposite direction");
                     
                     // get the actual Motor Counter value
                     motorCounter = driverService.getMotorCounter();
@@ -97,6 +97,8 @@ public class Activator implements BundleActivator
                         e.printStackTrace();
                     }
 
+                    System.out.println("AicasTxtApplication: polling ligh barrier states:");
+                    
                     System.out.println("AicasTxtApplication: Getting state of LightBarrier @ ColorSensor: "
                             + driverService.getLightBarrierState(LightBarrier.COLORSENSOR));
                     System.out.println("AicasTxtApplication: Getting state of LightBarrier @ Ejection   : "
@@ -108,25 +110,27 @@ public class Activator implements BundleActivator
                     System.out.println("AicasTxtApplication: Getting state of LightBarrier @ Blue       : "
                             + driverService.getLightBarrierState(LightBarrier.BLUE));
 
-//                    System.out.println("AicasTxtApplication: ready");
-//                    
-//                    Thread.sleep(3000);
-//                    
-//                    System.out.println("AicasTxtApplication: reading photo sensor: " + driverService.getColorSensorValue());
-//                    
-//                    System.out.println("AicasTxtApplication: ready");
-//                    
-//                    Thread.sleep(3000);
-//                    
-//                    System.out.println("AicasTxtApplication: activating compressor: " + driverService.activateCompressor());
-//                    
-//                    System.out.println("AicasTxtApplication: ready");
-//                    
-//                    Thread.sleep(3000);
-//                    
-//                    System.out.println("AicasTxtApplication: activating WHITE valve:  " + driverService.activateValve(Valve.WHITE));
-//                    System.out.println("AicasTxtApplication: activating RED   valve:  " + driverService.activateValve(Valve.RED));
-//                    System.out.println("AicasTxtApplication: activating BLUE  valve:  " + driverService.activateValve(Valve.BLUE));
+                    System.out.println("AicasTxtApplication: light barrier states ready");
+                    
+                    try
+                    {
+                        Thread.sleep(1000);
+                    } 
+                    catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
+                    
+                    System.out.println("AicasTxtApplication: photo sensor value = " + driverService.getColorSensorValue());
+                    
+                    System.out.println("AicasTxtApplication: activating compressor: " + driverService.activateCompressor());
+                    System.out.println("AicasTxtApplication: activating WHITE valve:  " + driverService.activateValve(Valve.WHITE));
+                    
+                    System.out.println("AicasTxtApplication: activating compressor: " + driverService.activateCompressor());
+                    System.out.println("AicasTxtApplication: activating RED   valve:  " + driverService.activateValve(Valve.RED));
+                    
+                    System.out.println("AicasTxtApplication: activating compressor: " + driverService.activateCompressor());
+                    System.out.println("AicasTxtApplication: activating BLUE  valve:  " + driverService.activateValve(Valve.BLUE));
                 }
             };
         }.start();     
