@@ -41,6 +41,8 @@ public interface AicasTxtDriverInterface
      */
     public int rotateMotor(int id, int direction, int speed, int distance);
     
+    public void stopMotor(int id);
+    
     /**
      * Light barrier enumeration for identification.
      */
@@ -63,10 +65,16 @@ public interface AicasTxtDriverInterface
     int getColorSensorValue();
     
     /**
-     * Gets the actual impulse sampler value attached to motor 01.
-     * @return
+     * Gets the actual motor counter value.
+     * A sampler is attached to C1 increments the counter of I1.
+     * @return 
      */
-    int getImpulseSamplerValue();
+    int getMotorCounter();
+    
+    /**
+     * 
+     */
+    void resetMotorCounter();    
     
     /**
      * Valve enumeration for identification.

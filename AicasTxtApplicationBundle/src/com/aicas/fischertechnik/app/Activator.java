@@ -53,14 +53,21 @@ public class Activator implements BundleActivator
                 {
 
                     System.out.println("AicasTxtApplication: trying to rotate TXT motor 1");
-                    
-//                  Thread.sleep(3000);
 
-                    driverService.rotateMotor(1, 1, 512, 127);
+                    // this is an example how we should use the motor for the sorting machine
+                    // instead of: driverService.rotateMotor(1, 1, 512, 127);
                     
-                    System.out.println("AicasTxtApplication: ready");
-
-                    System.out.println("AicasTxtApplication: trying to rotate TXT motor in opposite direction");
+                    
+                    // get the actual Motor Counter value
+                    int motorCounter = driverService.getMotorCounter();
+                    // set some motor target - e.g. move some object from LightBarrier.EJECTION to the White Valve and Tray
+                    int motorTarget = motorCounter + 5; 
+                    driverService.rotateMotor(1, 1, 512, 0);
+                    while (driverService.getMotorCounter() < motorTarget) {/* simply busy wait */}
+                    // optionally you can then 
+                    driverService.resetMotorCounter();
+                    
+                    System.out.println("AicasTxtApplication: motor rotation ready");                
                     
                     try
                     {
@@ -70,9 +77,17 @@ public class Activator implements BundleActivator
                         e1.printStackTrace();
                     }
                     
-                    driverService.rotateMotor(1, -1, 512, 127);
+                    System.out.println("AicasTxtApplication: trying to rotate TXT motor in opposite direction");
+                    
+                    // get the actual Motor Counter value
+                    motorCounter = driverService.getMotorCounter();
+                    motorTarget = motorCounter + 5; 
+                    driverService.rotateMotor(1, -1, 512, 0);
+                    while (driverService.getMotorCounter() < motorTarget) {/* simply busy wait */}
+                    // optionally you can then 
+                    driverService.resetMotorCounter();
 
-                    System.out.println("AicasTxtApplication: ready");
+                    System.out.println("AicasTxtApplication: motor inverse ready");
 
                     try
                     {

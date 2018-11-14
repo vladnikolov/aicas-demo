@@ -16,6 +16,9 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     
     @Override
     public native int rotateMotor(int id, int direction, int speed, int distance);
+    
+    @Override
+    public native void stopMotor(int id); 
 
     @Override
     public boolean getLightBarrierState(LightBarrier lightBarrier)
@@ -49,12 +52,20 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     }
 
     @Override
-    public int getImpulseSamplerValue()
+    public int getMotorCounter()
     {
-        return readControlRegister(1);
+        return readImpulseSamplerCounter();
     }
     
-    private native int readControlRegister(int id); 
+    @Override
+    public void resetMotorCounter()
+    {
+        
+    }
+    
+    private native int readImpulseSamplerCounter();
+    
+    private native void resetImpulseSamplerCounter();
 
     @Override
     public boolean activateValve(Valve valve)

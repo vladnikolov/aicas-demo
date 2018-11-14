@@ -78,7 +78,7 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env, jobje
 	pTArea->ftX1state.config_id++;
 
 #ifdef DEBUG
-	printf("AicasTxtJNIDriver: transfer area address %x\n", pTArea);
+	printf("AicasTxtJNIDriver: transfer area address %x\n", (unsigned long)pTArea);
 #endif
 
 
@@ -155,6 +155,24 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, j
 	return (jint) 0;
 }
 
+  /* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    stopMotor
+ * Signature: (I)I */
+#ifdef __cplusplus
+extern "C"
+#endif
+
+JNIEXPORT void JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_stopMotor(
+		JNIEnv *env, jobject t, jint id) {
+	if (id < 1 || id > 4) {
+		fprintf(stderr, "AicasTxtCommonJNIDriver: stopMotor(%d) - wrong motor index (1..4)", id);
+		return;
+	}
+
+	pTArea->ftX1out.duty[id * 2 - 2] = 0;
+	pTArea->ftX1out.duty[id * 2 - 1] = 0;
+}
+
 /* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
  * Method:    readInput
  * Signature: (I)I */
@@ -181,7 +199,7 @@ JNIEXPORT jboolean JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver
 		JNIEnv *env, jobject t, jint id, jint value) {
 	if (id < 1 || id > 8) {
 		fprintf(stderr, "AicasTxtCommonJNIDriver: writeOutput(%d, %d) - wrong output index (1..8)", id, value);
-		return -1;
+		return false;
 	}
 
 #ifdef DEBUG
@@ -193,19 +211,25 @@ JNIEXPORT jboolean JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver
 }
 
 /* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
- * Method:    readControlRegister
+ * Method:    readImpulseSamplerCounter
  * Signature: (I)I */
 #ifdef __cplusplus
 extern "C"
 #endif
-JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readControlRegister(
-		JNIEnv *env, jobject t, jint id) {
-	if (id < 1 || id > 4) {
-		fprintf(stderr, "AicasTxtCommonJNIDriver: readControlRegister(%d) - wrong input index (1..8)", id);
-		return -1;
-	}
+JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readImpulseSamplerCounter(
+		JNIEnv *env, jobject t) {
 
-	// we still do not know how to read the C1
-	// return (jint) pTArea->ftX1config.uni[id-1];
-	return -1;
+	return pTArea->ftX1in.counter[0];
+}
+
+/* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver
+ * Method:    resetImpulseSamplerCounter
+ * Signature: (I)I */
+#ifdef __cplusplus
+extern "C"
+#endif
+JNIEXPORT void JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_resetImpulseSamplerCounter(
+		JNIEnv *env, jobject t) {
+
+	pTArea->ftX1out.cnt_reset_cmd_id[0]++;
 }
