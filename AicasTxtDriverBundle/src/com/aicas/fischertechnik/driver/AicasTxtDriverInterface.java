@@ -94,5 +94,8 @@ public interface AicasTxtDriverInterface
      * Activates the compressor.
      * @return
      */
-    boolean activateCompressor();    
+    boolean activateCompressor();
+    
+    boolean stopCompressor();
+    
 }

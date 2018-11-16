@@ -19,7 +19,7 @@ FISH_X1_TRANSFER    *pTArea = 0;
 
 pthread_mutex_t mutexMotor;
 
-#define DEBUG 1
+// #define DEBUG 1
 
 
 /* Class:     com.aicas.fischertechnik.driver.AicasTxtCommonJNIDriver
@@ -49,32 +49,40 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_initTxt(JNIEnv *env, jobje
 		  fprintf(stderr,"Error: could not initialize TXT library\n");
 	  }
 
-	pTArea->ftX1config.uni[0].mode = MODE_U;
-	pTArea->ftX1config.uni[0].digital = 0;
-	pTArea->ftX1state.config_id++;
+	pTArea->ftX1config.uni[0].mode = MODE_R;
+	pTArea->ftX1config.uni[0].digital = 1;
+	// pTArea->ftX1state.config_id++;
 
 	pTArea->ftX1config.uni[1].mode = MODE_U;
 	pTArea->ftX1config.uni[1].digital = 0;
-	pTArea->ftX1state.config_id++;
+	// pTArea->ftX1state.config_id++;
 
-	pTArea->ftX1config.uni[2].mode = MODE_U;
-	pTArea->ftX1config.uni[2].digital = 0;
-	pTArea->ftX1state.config_id++;
+	pTArea->ftX1config.uni[2].mode = MODE_R;
+	pTArea->ftX1config.uni[2].digital = 1;
+	// pTArea->ftX1state.config_id++;
 
-	pTArea->ftX1config.uni[3].mode = MODE_U;
-	pTArea->ftX1config.uni[3].digital = 0;
-	pTArea->ftX1state.config_id++;
+	pTArea->ftX1config.uni[3].mode = MODE_R;
+	pTArea->ftX1config.uni[3].digital = 1;
+	// pTArea->ftX1state.config_id++;
 
-	pTArea->ftX1config.uni[4].mode = MODE_U;
-	pTArea->ftX1config.uni[4].digital = 0;
-	pTArea->ftX1state.config_id++;
+	pTArea->ftX1config.uni[4].mode = MODE_R;
+	pTArea->ftX1config.uni[4].digital = 1;
+	// pTArea->ftX1state.config_id++;
 
-	pTArea->ftX1config.uni[5].mode = MODE_U;
-	pTArea->ftX1config.uni[5].digital = 0;
-	pTArea->ftX1state.config_id++;
+	pTArea->ftX1config.uni[5].mode = MODE_R;
+	pTArea->ftX1config.uni[5].digital = 1;
+	// pTArea->ftX1state.config_id++;
 
-	pTArea->ftX1config.uni[6].mode = MODE_U;
-	pTArea->ftX1config.uni[6].digital = 0;
+	pTArea->ftX1config.uni[6].mode = MODE_R;
+	pTArea->ftX1config.uni[6].digital = 1;
+	// pTArea->ftX1state.config_id++;
+
+	pTArea->ftX1config.uni[6].mode = MODE_R;
+	pTArea->ftX1config.uni[6].digital = 1;
+
+	// according to Fischertechnik information used for counter implementation
+	pTArea->ftX1config.cnt[0].mode = MODE_R;      // C1 = Digital Switch with PullUp resistor
+
 	pTArea->ftX1state.config_id++;
 
 #ifdef DEBUG
@@ -120,7 +128,7 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, j
 	// Motor MX is controlled by output contacts OX-1 [X * 2 - 2] and OX [X * 2 - 1]
 	pTArea->ftX1out.distance[id * 2 - 2] = distance;         // Distance to drive Motor id
 	pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2]++;			// Set new Distance Value for Motor id
-	if (direction)
+	if (direction < 0)
 	{
 		pTArea->ftX1out.duty[id * 2 - 2] = speed;			// Switch Motor id ( O1 [0] ) on with PWM Value 512 (= max speed)
 		pTArea->ftX1out.duty[id * 2 - 1] = 0;   			// Switch Motor id ( O2 [1] ) with minus
@@ -141,7 +149,7 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, j
 //		// wait until motor has reached destination
 //#ifdef DEBUG
 //		printf("AicasTxtJNIDriver: waiting for motor move to finish\n");
-//		pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2]++;
+//		// pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2]++;
 //		printf("AicasTxtJNIDriver: motor %d, command-counter-out=%d, command-counter-in=%d\n",
 //				id, pTArea->ftX1out.motor_ex_cmd_id[id * 2 - 2], pTArea->ftX1in.motor_ex_cmd_id[id * 2 - 2]);
 //
@@ -219,7 +227,8 @@ extern "C"
 JNIEXPORT jint JNICALL Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_readImpulseSamplerCounter(
 		JNIEnv *env, jobject t) {
 
-	return pTArea->ftX1in.counter[0];
+	// return pTArea->ftX1in.counter[0];
+	return pTArea->ftX1in.cnt_in[0];
 }
 
 /* Class:     com.aicas.fischertechnik.AicasTxtCommonJNIDriver

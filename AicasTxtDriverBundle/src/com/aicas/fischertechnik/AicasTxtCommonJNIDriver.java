@@ -8,6 +8,8 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
         System.loadLibrary("AicasTxtCommonJNIDriver");
     }
     
+    static volatile int globalMotorCounter = 0;
+    
     @Override
     public native int initTxt();
       
@@ -23,20 +25,42 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     @Override
     public boolean getLightBarrierState(LightBarrier lightBarrier)
     {
+        boolean ret = true;
+        int val = -1;
         switch(lightBarrier) {
         case COLORSENSOR:
-            return (readInput(1) != 0) ? true : false; 
+            if ((val = readInput(1)) == 0)
+                ret = false;
+            else
+                ret = true;
+            break;
         case EJECTION:
-            return (readInput(3) != 0) ? true : false;
+            if ((val = readInput(3)) == 0)
+                ret = false;
+            else
+                ret = true;
+            break;
         case WHITE:
-            return (readInput(4) != 0) ? true : false;
+            if ((val = readInput(6)) == 0)
+                ret = false;
+            else
+                ret = true;
+            break;
         case RED:
-            return (readInput(5) != 0) ? true : false;
+            if ((val = readInput(7)) == 0)
+                ret = false;
+            else
+                ret = true;
+            break;
         case BLUE:
-            return (readInput(6) != 0) ? true : false;
+            if ((val = readInput(8)) == 0)
+                ret = false;
+            else
+                ret = true;
+            break;
         }
         
-        return false;
+        return ret;
     }
     
     @Override
@@ -54,7 +78,7 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
     @Override
     public int getMotorCounter()
     {
-        return readImpulseSamplerCounter();
+        return globalMotorCounter;
     }
     
     @Override
@@ -63,27 +87,50 @@ public class AicasTxtCommonJNIDriver implements AicasTxtDriverInterface
         resetImpulseSamplerCounter();
     }
     
-    private native int readImpulseSamplerCounter();
+    public native int readImpulseSamplerCounter();
     
-    private native void resetImpulseSamplerCounter();
+    public native void resetImpulseSamplerCounter();
 
     @Override
     public boolean activateValve(Valve valve)
     {
-        switch(valve) {
-        case WHITE:
-            return writeOutput(5, 512);
-        case RED:
-            return writeOutput(6, 512);
-        case BLUE:
-            return writeOutput(7, 512);
-        }        
-        return false;
+        try
+        {
+            switch (valve)
+            {
+            case WHITE:
+                writeOutput(5, 512);
+                Thread.sleep(500);
+                writeOutput(5, 0);
+                break;
+            case RED:
+                writeOutput(6, 512);
+                Thread.sleep(500);
+                writeOutput(6, 0);
+                break;
+            case BLUE:
+                writeOutput(7, 512);
+                Thread.sleep(500);
+                writeOutput(7, 0);
+                break;
+            }
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     @Override
     public boolean activateCompressor()
     {
         return writeOutput(8, 512);
+    }
+
+    @Override
+    public boolean stopCompressor()
+    {
+        
+        return writeOutput(8, 0);
     }
 }
