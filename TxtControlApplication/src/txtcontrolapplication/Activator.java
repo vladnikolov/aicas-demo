@@ -6,6 +6,7 @@ import org.osgi.framework.ServiceReference;
 
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
+import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.Valve;
 
 public class Activator implements BundleActivator
 {
@@ -18,6 +19,8 @@ public class Activator implements BundleActivator
 
   private int maxWhiteRange_ = 1390;
   private int maxRedRange_ = 1600 ;
+  private int motorCounter;
+  private int motorTarget = 0;
 
   static BundleContext getContext()
   {
@@ -71,7 +74,7 @@ public class Activator implements BundleActivator
                 //start motor
                 //driverService.rotateMotor(1, 1, 20, 10);
                 System.out.println("Starting Motor M1");
-                driverService.rotateMotor(1, 1, 512, 127);
+                driverService.rotateMotor(1, 1, 512, 0);
 
                 //Check for the block to reach color identification block
                 //Wait for 50ms to get the colour range
@@ -92,13 +95,14 @@ public class Activator implements BundleActivator
                       {
                         System.out.println("White block detected");
                         activateCompressor();
-
+                        whiteBlockCounter();
                         colorSensorValue = 0;
 
                       }else if (colorSensorValue > maxWhiteRange_ && colorSensorValue <= maxRedRange_)
                         {
                           System.out.println("Red block detected");
                           activateCompressor();
+                          redBlockCounter();
                           colorSensorValue = 0;
 
 
@@ -106,6 +110,7 @@ public class Activator implements BundleActivator
                           {
                             System.out.println("blue block detected");
                             activateCompressor();
+                            blueBlockCounter();
                             colorSensorValue = 0;
                           }
                   }
@@ -133,7 +138,8 @@ public class Activator implements BundleActivator
             System.out.println("ControllApplication: Getting value of color sensor @ I2: "
                 + driverService.getColorSensorValue());
           }
-      };
+      }
+
     }.start();
   }
 
@@ -152,17 +158,86 @@ public class Activator implements BundleActivator
 
   public void activateCompressor()
   {
-    System.out.println("Activating Compressor");
-    driverService.activateCompressor();
-    try
-    {
-      Thread.sleep(1000);
-    }
-    catch (InterruptedException e)
-    {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+    if (driverService.getColorSensorValue() > 511 && driverService.getLightBarrierState(LightBarrier.EJECTION) == true)
+      {
+        System.out.println("Activating Compressor");
+        driverService.activateCompressor();
+        //        startCounting();
+        try
+        {
+          Thread.sleep(1000);
+        }
+        catch (InterruptedException e)
+        {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
+      }
+  }
+
+  private void whiteBlockCounter()
+  {
+    do
+      {
+        motorCounter = driverService.getMotorCounter();
+        motorTarget = motorTarget + 1 ;
+        System.out.println("Counting Motor steps: " + motorTarget);
+      }while(motorTarget < 6);
+    driverService.resetMotorCounter();
+    ejectWhiteBlock();
+    motorTarget = 0;
+  };
+
+
+  private void redBlockCounter()
+  {
+    do
+      {
+        motorCounter = driverService.getMotorCounter();
+        motorTarget = motorTarget + 1 ;
+        System.out.println("Counting Motor steps: " + motorTarget);
+      }while(motorTarget > 15);
+    driverService.resetMotorCounter();
+    ejectRedBlock();
+    motorTarget = 0;
+
+  };
+
+
+
+  private void blueBlockCounter()
+  {
+    do
+      {
+        motorCounter = driverService.getMotorCounter();
+        motorTarget = motorTarget + 1 ;
+        System.out.println("Counting Motor steps: " + motorTarget);
+      }while(motorTarget < 27);
+    driverService.resetMotorCounter();
+    ejectBlueBlock();
+    motorTarget = 0;
+  };
+
+  private void ejectWhiteBlock()
+  {
+    System.out.println("Ejecting WHITE block");
+    driverService.activateValve(Valve.WHITE);
+    driverService.stopMotor(1);
+  }
+
+  private void ejectRedBlock()
+  {
+    System.out.println("Ejecting RED block");
+    driverService.activateValve(Valve.RED);
+    driverService.stopMotor(1);
+
+  }
+
+  private void ejectBlueBlock()
+  {
+    System.out.println("Ejecting BLUE block");
+    driverService.activateValve(Valve.BLUE);
+    driverService.stopMotor(1);
   }
 
 }
