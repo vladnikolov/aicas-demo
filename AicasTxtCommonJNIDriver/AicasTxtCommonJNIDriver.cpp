@@ -156,7 +156,7 @@ Java_com_aicas_fischertechnik_AicasTxtCommonJNIDriver_rotateMotor(JNIEnv *env, j
 //#endif
 //	}
 
-	printf("AicasTxtJNIDriver: motor %d ready\n", id);
+	// printf("AicasTxtJNIDriver: motor %d ready\n", id);
 
 	// pthread_mutex_unlock(&mutexMotor);
 

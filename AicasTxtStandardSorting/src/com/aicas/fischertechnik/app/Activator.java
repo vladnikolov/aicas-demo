@@ -40,14 +40,14 @@ public class Activator implements BundleActivator {
 	public void start(BundleContext bundleContext) throws Exception {
 	    Activator.context = bundleContext;
 
-        System.out.println("AicasTxtParallelSorting: starting");
+        System.out.println("AicasTxtStandardSorting: starting");
 
-        System.out.println("AicasTxtParallelSorting: querying TXT driver service");
+        System.out.println("AicasTxtStandardSorting: querying TXT driver service");
 
         driverServiceRef = context.getServiceReference(AicasTxtDriverInterface.class);
         driverService = context.getService(driverServiceRef);
 
-        System.out.println("AicasTxtParallelSorting: TXT driver service instantiated\n");
+        System.out.println("AicasTxtStandardSorting: TXT driver service instantiated\n");
         
         driverService.stopMotor(1);
 
@@ -60,10 +60,12 @@ public class Activator implements BundleActivator {
                 {
                     try
                     {
-                        System.out.println("AicasTxtParallelSorting: starting a new sorting loop");
-                        System.out.println("------------------------------------------------------\n");                       
+                        System.out.println("-----------------------------------------------");
+                        System.out.println("-             aicas standard sorting          -");
+                        System.out.println("-----------------------------------------------");
+                        System.out.println();
                         
-                        System.out.println("AicasTxtParallelSorting: waiting for a new object ...");
+                        System.out.println("AicasTxtStandardSorting: waiting for new object ...");
                         
                         // wait until an object crosses the first light barrier
                         while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
@@ -72,8 +74,8 @@ public class Activator implements BundleActivator {
                         
                         int motorCounter = driverService.getMotorCounter();
                         
-                        System.out.println("AicasTxtParallelSorting: new object detected!");
-                        System.out.println("AicasTxtParallelSorting: motor counter is: " + motorCounter);
+                        System.out.println("AicasTxtStandardSorting: new object detected!");
+                        // System.out.println("AicasTxtStandardSorting: motor counter is: " + motorCounter);
                         
                         // activate the motor of the supply line
                         driverService.rotateMotor(1, 1, 512, 0);
@@ -86,7 +88,7 @@ public class Activator implements BundleActivator {
                         int colorSensorValue = 0;
                         DetectedColor detectedColor = DetectedColor.NONE;
                         
-                        System.out.println("AicasTxtParallelSorting: sampling color value ");
+                        System.out.println("AicasTxtStandardSorting: sampling color value ");
                         
                         int colorSampleRegionIn = motorCounter + SAMPLING_REGION_START;
                         int colorSampleRegionOut = motorCounter + SAMPLING_REGION_END;
@@ -100,17 +102,21 @@ public class Activator implements BundleActivator {
                         // get first sample as history
                         colorSensorValue = driverService.getColorSensorValue();
                         
+                        int out_cnt = 0;
+                        
                         // sample and smooth to approximate color value
                         while (driverService.getMotorCounter() < colorSampleRegionOut) {
                             int val = driverService.getColorSensorValue();
                             // System.out.println("color val = " + val);
-                            System.out.print(". ");
+                            if ((out_cnt % 10) == 0) System.out.println(". ");
+                            // System.out.print(". ");
                             // smooth factor is = 0.35
                             colorSensorValue = (int) (driverService.getColorSensorValue() * 0.35 + colorSensorValue * 0.65);
-                            // System.out.println("AicasTxtParallelSorting: colorSensorValue = " + colorSensorValue);
+                            // System.out.println("AicasTxtStandardSorting: colorSensorValue = " + colorSensorValue);
+                            out_cnt++;
                         }
                         System.out.println();
-                        System.out.println("AicasTxtParallelSorting: approximated color value " + colorSensorValue);
+                        System.out.println("AicasTxtStandardSorting: approximated color value " + colorSensorValue);
                         
                         // decide whether the is object white, blue or red
                         // if (colorSensorValue < 1390) {
@@ -123,12 +129,14 @@ public class Activator implements BundleActivator {
                             detectedColor = DetectedColor.BLUE;
                         }
                                                 
-                        System.out.println("AicasTxtParallelSorting: detected object color " + detectedColor);
+                        System.out.println("AicasTxtStandardSorting: detected object color " + detectedColor);
                         
                         // wait until the object crosses the light barrier of the eject part
                         while (driverService.getLightBarrierState(LightBarrier.EJECTION)) {
                             continue;
                         }
+                        
+                        System.out.println("AicasTxtStandardSorting: preparing ejection for " + detectedColor);
                         
                         // in the mean time activate the compressor
                         driverService.activateCompressor();
@@ -140,6 +148,8 @@ public class Activator implements BundleActivator {
                         
                         // get the actual motor counter to compute the distance to the according ejection valve
                         motorCounter = driverService.getMotorCounter();
+                        
+                        System.out.println("AicasTxtStandardSorting: activating valve " + detectedColor);
                         
                         switch (detectedColor) {
                         case WHITE:
@@ -157,6 +167,8 @@ public class Activator implements BundleActivator {
                         case NONE:
                             System.err.println("impossible");
                         };
+                        
+                        System.out.println("AicasTxtStandardSorting: ready!\n\n\n");
                         
                         // stop the compressor                         
                         driverService.stopCompressor();
