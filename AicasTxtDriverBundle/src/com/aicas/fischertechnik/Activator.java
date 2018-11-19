@@ -54,7 +54,7 @@ public class Activator implements BundleActivator {
                         if (last_cnt == 1)
                         {
                             AicasTxtCommonJNIDriver.globalMotorCounter++;
-                            System.err.println(AicasTxtCommonJNIDriver.globalMotorCounter);
+                            // System.err.println(AicasTxtCommonJNIDriver.globalMotorCounter);
                             last_cnt = 0;
                         }
                     } else

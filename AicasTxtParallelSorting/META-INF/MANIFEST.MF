@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: AicasTxtParallelSorting
-Bundle-SymbolicName: AicasTxtParallelSorting
+Bundle-SymbolicName: AicasTxtStandardSorting
 Bundle-Version: 1.0.0
 Bundle-Activator: com.aicas.fischertechnik.app.Activator
 Automatic-Module-Name: AicasTxtParallelSorting

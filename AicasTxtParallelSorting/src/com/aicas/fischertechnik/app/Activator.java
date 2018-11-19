@@ -1,8 +1,5 @@
 package com.aicas.fischertechnik.app;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -18,6 +15,13 @@ public class Activator implements BundleActivator {
     ServiceReference<AicasTxtDriverInterface> driverServiceRef;
 
     AicasTxtDriverInterface driverService;
+    
+    static final int SAMPLING_REGION_START = 8;
+    static final int SAMPLING_REGION_END = 9;
+    
+    static final int COLOR_THRESHOLD_WHITE = 1000;
+    static final int COLOR_THRESHOLD_RED = 1400;
+    static final int COLOR_THRESHOLD_BLUE = 1800;
 
     private boolean run = true;
 
@@ -82,31 +86,38 @@ public class Activator implements BundleActivator {
                         int colorSensorValue = 0;
                         DetectedColor detectedColor = DetectedColor.NONE;
                         
-                        System.out.println("AicasTxtParallelSorting: sampling color value");
+                        System.out.println("AicasTxtParallelSorting: sampling color value ");
                         
-                        int colorSampleRegionIn = motorCounter + 8;
-                        int colorSampleRegionOut = motorCounter + 9;
+                        int colorSampleRegionIn = motorCounter + SAMPLING_REGION_START;
+                        int colorSampleRegionOut = motorCounter + SAMPLING_REGION_END;
                         
                         while (driverService.getMotorCounter() < colorSampleRegionIn) {
                             continue;
                         }
-                        
+                                                
                         // measure an exponentially smoothed object color value
+                        
+                        // get first sample as history
+                        colorSensorValue = driverService.getColorSensorValue();
+                        
+                        // sample and smooth to approximate color value
                         while (driverService.getMotorCounter() < colorSampleRegionOut) {
                             int val = driverService.getColorSensorValue();
-                            System.out.println("color val = " + val);
-                            colorSensorValue = (int) (driverService.getColorSensorValue() * 0.25 + colorSensorValue * 0.75);
-                            System.out.println("AicasTxtParallelSorting: colorSensorValue = " + colorSensorValue);
-                        }                       
-                        
-                        System.out.println("AicasTxtParallelSorting: final color sensor value " + colorSensorValue);
+                            // System.out.println("color val = " + val);
+                            System.out.print(". ");
+                            // smooth factor is = 0.35
+                            colorSensorValue = (int) (driverService.getColorSensorValue() * 0.35 + colorSensorValue * 0.65);
+                            // System.out.println("AicasTxtParallelSorting: colorSensorValue = " + colorSensorValue);
+                        }
+                        System.out.println();
+                        System.out.println("AicasTxtParallelSorting: approximated color value " + colorSensorValue);
                         
                         // decide whether the is object white, blue or red
                         // if (colorSensorValue < 1390) {
-                        if (colorSensorValue < 1000) {
+                        if (colorSensorValue < COLOR_THRESHOLD_WHITE) {
                             detectedColor = DetectedColor.WHITE;
                         // } else if (colorSensorValue < 1600) {
-                        } else if (colorSensorValue < 1400) {
+                        } else if (colorSensorValue < COLOR_THRESHOLD_RED) {
                             detectedColor = DetectedColor.RED;
                         } else {
                             detectedColor = DetectedColor.BLUE;
