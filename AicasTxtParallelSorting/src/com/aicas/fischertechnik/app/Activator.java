@@ -56,70 +56,106 @@ public class Activator implements BundleActivator {
                 {
                     try
                     {
-                        System.out.println("AicasTxtParallelSorting: starting a sensor & actuator test");
+                        System.out.println("AicasTxtParallelSorting: starting a new sorting loop");
                         System.out.println("------------------------------------------------------\n");                       
                         
+                        System.out.println("AicasTxtParallelSorting: waiting for a new object ...");
+                        
+                        // wait until an object crosses the first light barrier
                         while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
                             continue;
                         }
                         
+                        int motorCounter = driverService.getMotorCounter();
+                        
+                        System.out.println("AicasTxtParallelSorting: new object detected!");
+                        System.out.println("AicasTxtParallelSorting: motor counter is: " + motorCounter);
+                        
+                        // activate the motor of the supply line
                         driverService.rotateMotor(1, 1, 512, 0);
                         
+                        // wait until the object left out of the first light barrier
                         while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            continue;
+                        }            
+                      
+                        int colorSensorValue = 0;
+                        DetectedColor detectedColor = DetectedColor.NONE;
+                        
+                        System.out.println("AicasTxtParallelSorting: sampling color value");
+                        
+                        int colorSampleRegionIn = motorCounter + 8;
+                        int colorSampleRegionOut = motorCounter + 9;
+                        
+                        while (driverService.getMotorCounter() < colorSampleRegionIn) {
                             continue;
                         }
                         
-                        // driverService.stopMotor(1);
-                      
-                        int colorSensorValue = 0; 
-                                
-                        for (colorSensorValue = driverService.getColorSensorValue(); 
-                                (colorSensorValue > 0) && ((colorSensorValue < 3000));
-                                colorSensorValue = driverService.getColorSensorValue()) {
-                            Thread.sleep(50);
-                        }
+                        // measure an exponentially smoothed object color value
+                        while (driverService.getMotorCounter() < colorSampleRegionOut) {
+                            int val = driverService.getColorSensorValue();
+                            System.out.println("color val = " + val);
+                            colorSensorValue = (int) (driverService.getColorSensorValue() * 0.25 + colorSensorValue * 0.75);
+                            System.out.println("AicasTxtParallelSorting: colorSensorValue = " + colorSensorValue);
+                        }                       
                         
-                        DetectedColor detectedColor = DetectedColor.NONE;
+                        System.out.println("AicasTxtParallelSorting: final color sensor value " + colorSensorValue);
                         
-                        if (colorSensorValue < 1390) {
+                        // decide whether the is object white, blue or red
+                        // if (colorSensorValue < 1390) {
+                        if (colorSensorValue < 1000) {
                             detectedColor = DetectedColor.WHITE;
-                        } else if (colorSensorValue < 1600) {
+                        // } else if (colorSensorValue < 1600) {
+                        } else if (colorSensorValue < 1400) {
                             detectedColor = DetectedColor.RED;
                         } else {
                             detectedColor = DetectedColor.BLUE;
                         }
                                                 
-                        System.out.println("AicasTxtParallelSorting: detected color " + detectedColor);
+                        System.out.println("AicasTxtParallelSorting: detected object color " + detectedColor);
                         
-                        while (driverService.getLightBarrierState(LightBarrier.EJECTION)) {}
+                        // wait until the object crosses the light barrier of the eject part
+                        while (driverService.getLightBarrierState(LightBarrier.EJECTION)) {
+                            continue;
+                        }
                         
+                        // in the mean time activate the compressor
                         driverService.activateCompressor();
                         
-                        int motorCounter = driverService.getMotorCounter();
+                        // wait until the object left out of the eject light barrier
+                        while (!driverService.getLightBarrierState(LightBarrier.EJECTION)) {
+                            continue;
+                        }   
+                        
+                        // get the actual motor counter to compute the distance to the according ejection valve
+                        motorCounter = driverService.getMotorCounter();
                         
                         switch (detectedColor) {
                         case WHITE:
-                            while (driverService.getMotorCounter() < motorCounter + 3);
+                            while (driverService.getMotorCounter() < motorCounter + 1);
                             driverService.activateValve(Valve.WHITE);
                             break;
                         case RED:
-                            while (driverService.getMotorCounter() < motorCounter + 7);
-                            driverService.activateValve(Valve.WHITE);
+                            while (driverService.getMotorCounter() < motorCounter + 6);
+                            driverService.activateValve(Valve.RED);
                             break;
                         case BLUE:
-                            while (driverService.getMotorCounter() < motorCounter + 12);
-                            driverService.activateValve(Valve.WHITE);
-                            break;
+                            while (driverService.getMotorCounter() < motorCounter + 11);
+                            driverService.activateValve(Valve.BLUE);
+                            break;                            
                         case NONE:
                             System.err.println("impossible");
                         };
                         
-                        
+                        // stop the compressor                         
                         driverService.stopCompressor();
                         
+                        // stop the motor
                         driverService.stopMotor(1);
                         
-                    } catch (Exception e)
+                        // loop waiting for next object
+                    } 
+                    catch (Exception e)
                     {
                         e.printStackTrace();
                     }
