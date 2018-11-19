@@ -1,0 +1,52 @@
+<project name="AicasTxtMultipleSorting" default="jar" basedir=".">
+
+	<property name="src" location="src" />
+	<property name="build" location="bin" />
+	<property name="javac" location="/usr/local/jamaica/bin/jamaicac" />
+	<property name="rt.class.path" location="/usr/local/jamaica/target/linux-x86_64/lib/rt.jar" />
+	<property name="plugins.dir" location="../plugins" />
+	<property name="osgi-api" location="../osgi-core/osgi.core-6.0.0.jar" />
+	<property name="version" value="1.0.0" />
+	<property name="dependency-path" value="../AicasTxtDriverBundle/bin" />
+
+	<path id="project.class.path">
+		<pathelement path="${rt.class.path}" />
+		<pathelement path="${osgi-api}"/>
+		<pathelement path="${dependency-path}"/>
+		<!-- <pathelement path="${my.class.path}" /> -->
+	</path>
+
+	<!-- example for including a fileset to classpath
+	<path id="my.class.path">
+		<fileset dir="<my-dir-location>">
+			<include name="**/*.*" />
+		</fileset>
+	</path>
+	-->
+
+	<target name="init">
+		<mkdir dir="${build}" />
+	</target>
+
+	<target name="cleanbuild" depends="clean,init,compile" />
+
+	<target name="compile" depends="init">
+			<javac fork="yes" executable="${javac}" srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" verbose="true" debuglevel="source,lines,vars">
+				<src path="${src}"/>
+				<classpath refid="project.class.path" />
+			</javac>
+		</target>
+
+	<target name="clean">
+		<delete dir="${build}" />
+		<delete file="${plugins.dir}/${ant.project.name}_${version}.jar" />
+	</target>
+
+	<target name="jar" depends="cleanbuild">
+		<jar destfile="${plugins.dir}/${ant.project.name}_${version}.jar" basedir="${build}" manifest="META-INF/MANIFEST.MF">
+			<!--  <fileset dir="lib" includes="*.so" /> -->
+			<!-- <zipgroupfileset dir="lib" includes="*.jar"/> -->
+			<!-- <zipfileset dir="lib" includes="*.so" prefix="lib"/> -->
+		</jar>
+	</target>
+</project>
