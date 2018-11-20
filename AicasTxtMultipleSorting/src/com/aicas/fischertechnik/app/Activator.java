@@ -1,16 +1,8 @@
 package com.aicas.fischertechnik.app;
 
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-
-import javax.realtime.PeriodicParameters;
-import javax.realtime.PriorityParameters;
-import javax.realtime.PriorityScheduler;
-import javax.realtime.RealtimeThread;
-import javax.realtime.RelativeTime;
+import java.util.concurrent.TimeUnit;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -28,7 +20,9 @@ public class Activator implements BundleActivator
 
     AicasTxtDriverInterface driverService;
     
-    HashSet<ObjectWorkerThread> workerSet = new HashSet<ObjectWorkerThread>(); 
+    // HashSet<ObjectWorkerThread> workerSet = new HashSet<ObjectWorkerThread>(); 
+    
+    ExecutorService executorService = Executors.newFixedThreadPool(7);
     
     int workerThreadCounter = 0;
 
@@ -66,9 +60,10 @@ public class Activator implements BundleActivator
         driverService.stopMotor(1);
 
         // TODO: make as real-time thread
-        RealtimeThread outerThread = new RealtimeThread(
-                new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3), 
-                new PeriodicParameters(new RelativeTime(100, 0)))        
+//        RealtimeThread outerThread = new RealtimeThread(
+//                new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3), 
+//                new PeriodicParameters(new RelativeTime(250, 0)))        
+        Thread outerThread = new Thread("outer-loop-thread")
         {
             public void run()
             {
@@ -77,25 +72,39 @@ public class Activator implements BundleActivator
                 {
                     try
                     {
-//                        // wait until an object crosses the first light barrier
-//                        while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR))
-//                        {
-//                            continue;
-//                        }
+                        // wait until an object crosses the first light barrier
+                        int motorCounter;
                         
-                        if (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR))
-                        {
-
-                            int motorCounter = driverService.getMotorCounter();
-
-                            ObjectWorkerThread objectWorkerThread = new ObjectWorkerThread(driverService, motorCounter);
-                            workerSet.add(objectWorkerThread);
-                            objectWorkerThread.start();
+                        while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            continue;
                         }
 
-                        waitForNextPeriod();
+                        motorCounter = driverService.getMotorCounter();
+                        ObjectWorkerThread workerRunnable = new ObjectWorkerThread();
+                        workerRunnable.initialMotorCounter = motorCounter;
+                        workerRunnable.driverService = driverService;
+                        workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
+                        
+                        executorService.execute(workerRunnable);
+
+//                        ObjectWorkerThread objectWorkerThread = new ObjectWorkerThread(driverService, motorCounter);
+//                        workerSet.add(objectWorkerThread);
+//                        objectWorkerThread.setName("WorkerThread-" + ++workerThreadCounter);
+//                        objectWorkerThread.start();
+                        
+                        while(driverService.getMotorCounter() < motorCounter + 2) {
+                            /** wait until object leaves the first light barrier **/
+                        }
+                        
+                        // wait for the object to leave the sensor region, otherwise we create several worker threads
+                        while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            continue;
+                        }
+
+                        // waitForNextPeriod();
                         // loop waiting for next object
-                    } catch (Exception e)
+                    } 
+                    catch (Exception e)
                     {
                         e.printStackTrace();
                     }
@@ -103,7 +112,6 @@ public class Activator implements BundleActivator
             };
         };
         
-        outerThread.setName("WorkerThread-" + ++workerThreadCounter);
         outerThread.start();
     }
 
@@ -117,9 +125,11 @@ public class Activator implements BundleActivator
     {
         Activator.context = null;
         run = false;
-        for (ObjectWorkerThread t : workerSet) {
-            t.join();
-        }
+        executorService.shutdown();
+        executorService.awaitTermination(7, TimeUnit.SECONDS);
+//        for (ObjectWorkerThread t : workerSet) {
+//            t.join();
+//        }
     }
 
 }

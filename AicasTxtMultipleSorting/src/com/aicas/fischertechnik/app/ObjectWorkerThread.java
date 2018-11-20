@@ -1,56 +1,62 @@
 package com.aicas.fischertechnik.app;
 
-import javax.realtime.AperiodicParameters;
-import javax.realtime.PriorityParameters;
-import javax.realtime.PriorityScheduler;
-import javax.realtime.RealtimeThread;
-
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.Valve;
 
-public class ObjectWorkerThread extends RealtimeThread
+// public class ObjectWorkerThread extends RealtimeThread
+// public class ObjectWorkerThread extends Thread
+public class ObjectWorkerThread implements Runnable
 {
-    int initialMotorCounter;
-    int motorCounter;
-    AicasTxtDriverInterface driverService;
+    public int initialMotorCounter;
+    public String name;
+    public AicasTxtDriverInterface driverService;
     
+    int motorCounter;
+
     static volatile boolean motorStarted = false;
     static volatile boolean compressorActivated = false;
     static volatile int activeWorkers = 0;
-    
+
     private enum DetectedColor
     {
         WHITE, RED, BLUE, NONE,
     }
-    
-    static final int SAMPLING_REGION_START = 8;
-    static final int SAMPLING_REGION_END = 9;
 
-    static final int COLOR_THRESHOLD_WHITE = 1000;
-    static final int COLOR_THRESHOLD_RED = 1400;
+    static final int DISTANCE_SAMPLING_REGION_START = 8;
+    static final int DISTANCE_SAMPLING_REGION_END = 9;
+    static final int DISTANCE_LIGHT_BARRIER_EJECTION= 14;
+    static final int DISTANCE_VALVE_WHITE = 18;
+    static final int DISTANCE_VALVE_RED = 24;
+    static final int DISTANCE_VALVE_BLUE = 29;
+    
+
+    static final int COLOR_THRESHOLD_WHITE = 1190; // 1390
+    static final int COLOR_THRESHOLD_RED = 1500;   // 1600
     static final int COLOR_THRESHOLD_BLUE = 1800;
-    
-    static final int EJECTION_DISTANCE = 14;
-    
-    public ObjectWorkerThread(AicasTxtDriverInterface driverService, int initialMotorCounter)
+
+    static final double SMOOTH_FACTOR = 0.125;
+
+    // public ObjectWorkerThread(AicasTxtDriverInterface driverService, int initialMotorCounter)
+    public ObjectWorkerThread()
     {
-        this.initialMotorCounter = initialMotorCounter;
-        this.driverService = driverService;
-        this.setSchedulingParameters(new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 2));
-        this.setReleaseParameters(new AperiodicParameters());
+//        this.initialMotorCounter = initialMotorCounter;
+//        this.driverService = driverService;
+//        this.setSchedulingParameters(new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 2));
+//        this.setReleaseParameters(new AperiodicParameters());
     }
-    
+
     @Override
     public void run()
     {
         activeWorkers++;
-        System.out.println(String.format("AicasTxtMultipleSorting: %s new object detected!", this.getName()));
-        // System.out.println("AicasTxtMultipleSorting: motor counter is: " +
-        // motorCounter);
+        System.out.println(String.format("AicasTxtMultipleSorting: %s new object detected!", name));
+        System.out.println(String.format("AicasTxtMultipleSorting: %s initial motor counter is = %d", name,
+                initialMotorCounter));
 
         // activate the motor of the supply line
-        if(!motorStarted) {
+        if (!motorStarted)
+        {
             driverService.rotateMotor(1, 1, 512, 0);
             motorStarted = true;
         }
@@ -61,14 +67,17 @@ public class ObjectWorkerThread extends RealtimeThread
             continue;
         }
 
+        System.out.println(
+                String.format("AicasTxtMultipleSorting: %s left first light barrier with motor counter = %d",
+                        name, driverService.getMotorCounter()));
+
         int colorSensorValue = 0;
         DetectedColor detectedColor = DetectedColor.NONE;
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s sampling color value", this.getName()));
-        
+        System.out.println(String.format("AicasTxtMultipleSorting: %s sampling color value", name));
 
-        int colorSampleRegionIn = initialMotorCounter + SAMPLING_REGION_START;
-        int colorSampleRegionOut = initialMotorCounter + SAMPLING_REGION_END;
+        int colorSampleRegionIn = initialMotorCounter + DISTANCE_SAMPLING_REGION_START;
+        int colorSampleRegionOut = initialMotorCounter + DISTANCE_SAMPLING_REGION_END;
 
         while (driverService.getMotorCounter() < colorSampleRegionIn)
         {
@@ -77,7 +86,7 @@ public class ObjectWorkerThread extends RealtimeThread
 
         // measure an exponentially smoothed object color value
 
-        // get first sample as history
+        // initialize history with first sample value
         colorSensorValue = driverService.getColorSensorValue();
 
         int out_cnt = 0;
@@ -86,50 +95,54 @@ public class ObjectWorkerThread extends RealtimeThread
         while (driverService.getMotorCounter() < colorSampleRegionOut)
         {
             int val = driverService.getColorSensorValue();
-            // System.out.println("color val = " + val);
-            if ((out_cnt % 10) == 0)
-                System.out.println(". ");
-            // System.out.print(". ");
-            // smooth factor is = 0.35
-            colorSensorValue = (int) (driverService.getColorSensorValue() * 0.35
-                    + colorSensorValue * 0.65);
-            // System.out.println("AicasTxtMultipleSorting: colorSensorValue = " +
-            // colorSensorValue);
+            System.out.println(String.format("%s color val = %d", name, val));            
+//            if ((out_cnt % 10) == 0)
+//                System.out.print(". ");
+            colorSensorValue = (int) (driverService.getColorSensorValue() * SMOOTH_FACTOR + colorSensorValue * (1 - SMOOTH_FACTOR));
+            System.out.println(String.format("%s colorSensorValue = %d", name, colorSensorValue));
             out_cnt++;
         }
         System.out.println();
-        System.out.println(String.format("AicasTxtMultipleSorting: %s approximated color value %d", 
-                this.getName(), colorSensorValue));
+        System.out.println(String.format("AicasTxtMultipleSorting: %s sampled color value %d", name,
+                colorSensorValue));
 
-        // decide whether the is object white, blue or red
-        // if (colorSensorValue < 1390) {
+        // decide whether the object is white, red or blue        
         if (colorSensorValue < COLOR_THRESHOLD_WHITE)
         {
             detectedColor = DetectedColor.WHITE;
-            // } else if (colorSensorValue < 1600) {
-        } else if (colorSensorValue < COLOR_THRESHOLD_RED)
+        } 
+        else if (colorSensorValue < COLOR_THRESHOLD_RED)
         {
             detectedColor = DetectedColor.RED;
-        } else
+        } 
+        else
         {
             detectedColor = DetectedColor.BLUE;
         }
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s detected object color %s", 
-                this.getName(), detectedColor));
-        
+        System.out.println(
+                String.format("AicasTxtMultipleSorting: %s detected object color %s", name, detectedColor));
 
-        // wait until the object crosses the light barrier of the eject part
-        while ((driverService.getLightBarrierState(LightBarrier.EJECTION) && 
-                (driverService.getMotorCounter() < initialMotorCounter + EJECTION_DISTANCE)))
+        // wait until the according object proceeds to proximity of the ejection light barrier
+        while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_LIGHT_BARRIER_EJECTION)
+        {
+            continue;
+        }
+        
+        // wait until the object crosses the ejection light barrier 
+        while (driverService.getLightBarrierState(LightBarrier.EJECTION))
         {
             continue;
         }
 
-        System.out.println("AicasTxtMultipleSorting: preparing ejection for " + detectedColor);
+//        System.out.println(String.format("AicasTxtMultipleSorting: %s crossed EJECTION barrier with motor counter = %d",
+//                name, driverService.getMotorCounter()));
+
+        System.out.println(String.format("AicasTxtMultipleSorting: %s preparing ejection for %s", name, detectedColor));
 
         // in the mean time activate the compressor
-        if (!compressorActivated) {
+        if (!compressorActivated)
+        {
             driverService.activateCompressor();
             compressorActivated = true;
         }
@@ -144,46 +157,66 @@ public class ObjectWorkerThread extends RealtimeThread
         // ejection valve
         motorCounter = driverService.getMotorCounter();
 
-        System.out.println("AicasTxtMultipleSorting: activating valve " + detectedColor);
+        System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));
 
         switch (detectedColor)
         {
         case WHITE:
-            while (driverService.getMotorCounter() < motorCounter + 1)
-                ;
+            while (driverService.getMotorCounter() < motorCounter + 1);
             driverService.activateValve(Valve.WHITE);
             break;
         case RED:
-            while (driverService.getMotorCounter() < motorCounter + 6)
-                ;
+            while (driverService.getMotorCounter() < motorCounter + 6);
             driverService.activateValve(Valve.RED);
             break;
         case BLUE:
-            while (driverService.getMotorCounter() < motorCounter + 11)
-                ;
+            while (driverService.getMotorCounter() < motorCounter + 11);
             driverService.activateValve(Valve.BLUE);
             break;
         case NONE:
             System.err.println("impossible");
-        }
-        ;
-
-        System.out.println("AicasTxtMultipleSorting: ready!\n\n\n");
+        };
+        
+        // obviously our motor counter gets a small additive drift.
+        // therefore better use the code above, since it syncs on the EJECTION light barrier
+//        switch (detectedColor)
+//        {
+//        case WHITE:
+//            while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_VALVE_WHITE);
+//            driverService.activateValve(Valve.WHITE);
+//            break;
+//        case RED:
+//            while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_VALVE_RED);
+//            driverService.activateValve(Valve.RED);
+//            break;
+//        case BLUE:
+//            while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_VALVE_BLUE);
+//            driverService.activateValve(Valve.BLUE);
+//            break;
+//        case NONE:
+//            System.err.println("impossible");
+//        };
 
         activeWorkers--;
-        
-        if (activeWorkers == 0) {
+
+        // if this was the last object switch off compressor and motor
+        if (activeWorkers == 0)
+        {
             // stop the compressor
-            if (compressorActivated) {
+            if (compressorActivated)
+            {
                 driverService.stopCompressor();
                 compressorActivated = false;
             }
 
             // stop the motor
-            if (motorStarted) {
+            if (motorStarted)
+            {
                 driverService.stopMotor(1);
                 motorStarted = false;
             }
         }
+        
+        System.out.println(String.format("AicasTxtMultipleSorting: %s ready!\n\n\n", name));
     }
 }
