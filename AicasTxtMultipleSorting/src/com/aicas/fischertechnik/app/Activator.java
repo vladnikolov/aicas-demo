@@ -2,6 +2,7 @@ package com.aicas.fischertechnik.app;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.osgi.framework.BundleActivator;
@@ -22,7 +23,17 @@ public class Activator implements BundleActivator
     
     // HashSet<ObjectWorkerThread> workerSet = new HashSet<ObjectWorkerThread>(); 
     
-    ExecutorService executorService = Executors.newFixedThreadPool(7);
+    ExecutorService executorService = Executors.newFixedThreadPool(7, new ThreadFactory()
+    {
+        
+        @Override
+        public Thread newThread(Runnable r)
+        {
+            Thread t = new Thread();
+            t.setPriority(Thread.MAX_PRIORITY);
+            return t;
+        }
+    });
     
     int workerThreadCounter = 0;
 
