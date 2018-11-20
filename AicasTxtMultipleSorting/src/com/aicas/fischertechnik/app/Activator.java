@@ -15,7 +15,7 @@ import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
 public class Activator implements BundleActivator
 {
 
-    private static BundleContext context;
+    static BundleContext context;
 
     ServiceReference<AicasTxtDriverInterface> driverServiceRef;
 
@@ -64,7 +64,6 @@ public class Activator implements BundleActivator
         System.out.println("AicasTxtMultipleSorting: querying TXT driver service");
 
         driverServiceRef = context.getServiceReference(AicasTxtDriverInterface.class);
-        driverService = context.getService(driverServiceRef);
 
         System.out.println("AicasTxtMultipleSorting: TXT driver service instantiated\n");
 

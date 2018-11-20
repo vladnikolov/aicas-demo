@@ -1,8 +1,11 @@
 package com.aicas.fischertechnik.app;
 
+import org.osgi.framework.ServiceReference;
+
+import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
+import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic.DetectedColor;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
-import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.Valve;
 
 // public class ObjectWorkerThread extends RealtimeThread
 // public class ObjectWorkerThread extends Thread
@@ -18,10 +21,10 @@ public class ObjectWorkerThread implements Runnable
     static volatile boolean compressorActivated = false;
     static volatile int activeWorkers = 0;
 
-    private enum DetectedColor
-    {
-        WHITE, RED, BLUE, NONE,
-    }
+//    private enum DetectedColor
+//    {
+//        WHITE, RED, BLUE, NONE
+//    }
 
     static final int DISTANCE_SAMPLING_REGION_START = 8;
     static final int DISTANCE_SAMPLING_REGION_END = 9;
@@ -36,6 +39,9 @@ public class ObjectWorkerThread implements Runnable
     static final int COLOR_THRESHOLD_BLUE = 1800;
 
     static final double SMOOTH_FACTOR = 0.125;
+    
+    ServiceReference<AicasTxtSortingLogic> sortingLogicRef;
+    AicasTxtSortingLogic sortingLogic;
 
     // public ObjectWorkerThread(AicasTxtDriverInterface driverService, int initialMotorCounter)
     public ObjectWorkerThread()
@@ -139,6 +145,8 @@ public class ObjectWorkerThread implements Runnable
 //                name, driverService.getMotorCounter()));
 
         System.out.println(String.format("AicasTxtMultipleSorting: %s preparing ejection for %s", name, detectedColor));
+        
+        
 
         // in the mean time activate the compressor
         if (!compressorActivated)
@@ -158,24 +166,32 @@ public class ObjectWorkerThread implements Runnable
         motorCounter = driverService.getMotorCounter();
 
         System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));
+        
+        sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class);
+        if (sortingLogicRef != null) {
+            sortingLogic = Activator.context.getService(sortingLogicRef);
+        }
 
-        switch (detectedColor)
-        {
-        case WHITE:
-            while (driverService.getMotorCounter() < motorCounter + 1);
-            driverService.activateValve(Valve.WHITE);
-            break;
-        case RED:
-            while (driverService.getMotorCounter() < motorCounter + 6);
-            driverService.activateValve(Valve.RED);
-            break;
-        case BLUE:
-            while (driverService.getMotorCounter() < motorCounter + 11);
-            driverService.activateValve(Valve.BLUE);
-            break;
-        case NONE:
-            System.err.println("impossible");
-        };
+        // execute the exchangeable sorting logic
+        sortingLogic.doSort(detectedColor, motorCounter, driverService);
+        
+//        switch (detectedColor)
+//        {
+//        case WHITE:
+//            while (driverService.getMotorCounter() < motorCounter + 1);
+//            driverService.activateValve(Valve.WHITE);
+//            break;
+//        case RED:
+//            while (driverService.getMotorCounter() < motorCounter + 6);
+//            driverService.activateValve(Valve.RED);
+//            break;
+//        case BLUE:
+//            while (driverService.getMotorCounter() < motorCounter + 11);
+//            driverService.activateValve(Valve.BLUE);
+//            break;
+//        case NONE:
+//            System.err.println("impossible");
+//        };
         
         // obviously our motor counter gets a small additive drift.
         // therefore better use the code above, since it syncs on the EJECTION light barrier
@@ -216,6 +232,8 @@ public class ObjectWorkerThread implements Runnable
                 motorStarted = false;
             }
         }
+        
+        Activator.context.ungetService(sortingLogicRef);
         
         System.out.println(String.format("AicasTxtMultipleSorting: %s ready!\n\n\n", name));
     }
