@@ -145,14 +145,18 @@ public class ObjectWorkerThread implements Runnable
 
         System.out.println(String.format("AicasTxtMultipleSorting: %s preparing ejection for %s", name, detectedColor));
         
-        
-
         // in the mean time activate the compressor
         if (!compressorActivated)
         {
             driverService.activateCompressor();
             compressorActivated = true;
         }
+        
+        ServiceReference<AicasTxtSortingLogic> sortingLogicRef; 
+        int query_cnt = 0;
+        for (sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class) ;
+                (sortingLogicRef == null) && (query_cnt < 5);
+                sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class), query_cnt++); 
 
         // wait until the object left out of the eject light barrier
         while (!driverService.getLightBarrierState(LightBarrier.EJECTION))
@@ -164,22 +168,21 @@ public class ObjectWorkerThread implements Runnable
         // ejection valve
         motorCounter = driverService.getMotorCounter();
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));
+        System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));               
         
-//        sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class);
-//        if (sortingLogicRef != null) {
-//            sortingLogic = Activator.context.getService(sortingLogicRef);
-//        }
-        
-        sortingLogic = Activator.sortingServiceTracker.getService();
-        
-        if (sortingLogic == null) {
+        if (sortingLogicRef != null) {
+         // execute the exchangeable sorting logic
+            sortingLogic = Activator.context.getService(sortingLogicRef);            
+        } else {
             System.out.println(String.format("AicasTxtStandardSortingLogic: %s no sorting service found", name));
             System.out.println(String.format("AicasTxtStandardSortingLogic: %s skipping sorting !", name));
         }
-
-        // execute the exchangeable sorting logic
-        sortingLogic.doSort(detectedColor, motorCounter);
+        
+        if (sortingLogic != null) {
+            sortingLogic.doSort(detectedColor, motorCounter);
+        }
+        
+        // sortingLogic = Activator.sortingServiceTracker.getService();
         
 //        switch (detectedColor)
 //        {

@@ -11,6 +11,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
@@ -25,9 +26,35 @@ public class Activator implements BundleActivator
 
     AicasTxtDriverInterface driverService;
     
-    static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
-    
-    // HashSet<ObjectWorkerThread> workerSet = new HashSet<ObjectWorkerThread>(); 
+//    static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
+//    
+//    ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceCustomizer = 
+//            new ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic>() {
+//
+//                @Override
+//                public AicasTxtSortingLogic addingService(ServiceReference<AicasTxtSortingLogic> reference)
+//                {
+//                    @SuppressWarnings("unchecked")
+//                    AicasTxtSortingLogic result = (AicasTxtSortingLogic) context.getService(reference);
+//                    return result;
+//                }
+//
+//                @Override
+//                public void modifiedService(ServiceReference<AicasTxtSortingLogic> reference,
+//                        AicasTxtSortingLogic service)
+//                {
+//                    // TODO Auto-generated method stub
+//                    
+//                }
+//
+//                @Override
+//                public void removedService(ServiceReference<AicasTxtSortingLogic> reference,
+//                        AicasTxtSortingLogic service)
+//                {
+//                    context.ungetService(reference);
+//                }
+//                
+//            };
     
 //    ExecutorService executorService = Executors.newFixedThreadPool(7, new ThreadFactory()
 //    {
@@ -62,10 +89,10 @@ public class Activator implements BundleActivator
     {
         Activator.context = bundleContext;
         
-        sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
-            (bundleContext, AicasTxtSortingLogic.class, null);
-    
-        sortingServiceTracker.open();
+//        sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
+//            (bundleContext, AicasTxtSortingLogic.class, null);
+//    
+//        sortingServiceTracker.open();
 
         System.out.println("-----------------------------------------------------------");
         System.out.println("-             aicas multiple sorting application          -");
@@ -83,6 +110,7 @@ public class Activator implements BundleActivator
         System.out.println("AicasTxtMultipleSorting: TXT driver service instantiated\n");
 
         driverService.stopMotor(1);
+        driverService.stopCompressor();
 
         // TODO: make as real-time thread
 //        RealtimeThread outerThread = new RealtimeThread(
@@ -156,9 +184,7 @@ public class Activator implements BundleActivator
         run = false;
         executorService.shutdown();
         executorService.awaitTermination(7, TimeUnit.SECONDS);
-//        for (ObjectWorkerThread t : workerSet) {
-//            t.join();
-//        }
+        // sortingServiceTracker.close();
     }
 
 }

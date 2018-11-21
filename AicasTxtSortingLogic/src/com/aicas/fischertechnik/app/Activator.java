@@ -29,10 +29,9 @@ public class Activator implements BundleActivator {
 		
 		driverServiceTracker.open();
 		
-		context.registerService(AicasTxtSortingLogic.class, new AicasTxtStandardSortingLogic(), null);
-		
-		// get the driverService instead of assigning it
-		
+		// context.registerService(AicasTxtSortingLogic.class, new AicasTxtStandardSortingLogic(), null);
+		// context.registerService(AicasTxtSortingLogic.class, new AicasTxtBWRSortingLogic(), null);
+		context.registerService(AicasTxtSortingLogic.class, new AicasTxtRWBSortingLogic(), null);
 	}
 
 	/*
