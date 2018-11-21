@@ -5,10 +5,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.SortingFocusTraversalPolicy;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
+import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
 
@@ -21,19 +25,23 @@ public class Activator implements BundleActivator
 
     AicasTxtDriverInterface driverService;
     
+    static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
+    
     // HashSet<ObjectWorkerThread> workerSet = new HashSet<ObjectWorkerThread>(); 
     
-    ExecutorService executorService = Executors.newFixedThreadPool(7, new ThreadFactory()
-    {
-        
-        @Override
-        public Thread newThread(Runnable r)
-        {
-            Thread t = new Thread();
-            t.setPriority(Thread.MAX_PRIORITY);
-            return t;
-        }
-    });
+//    ExecutorService executorService = Executors.newFixedThreadPool(7, new ThreadFactory()
+//    {
+//        
+//        @Override
+//        public Thread newThread(Runnable r)
+//        {
+//            Thread t = new Thread();
+//            t.setPriority(Thread.MAX_PRIORITY);
+//            return t;
+//        }
+//    });
+    
+    ExecutorService executorService = Executors.newFixedThreadPool(7);
     
     int workerThreadCounter = 0;
 
@@ -53,6 +61,11 @@ public class Activator implements BundleActivator
     public void start(BundleContext bundleContext) throws Exception
     {
         Activator.context = bundleContext;
+        
+        sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
+            (bundleContext, AicasTxtSortingLogic.class, null);
+    
+        sortingServiceTracker.open();
 
         System.out.println("-----------------------------------------------------------");
         System.out.println("-             aicas multiple sorting application          -");
@@ -64,6 +77,8 @@ public class Activator implements BundleActivator
         System.out.println("AicasTxtMultipleSorting: querying TXT driver service");
 
         driverServiceRef = context.getServiceReference(AicasTxtDriverInterface.class);
+        
+        driverService = context.getService(driverServiceRef);
 
         System.out.println("AicasTxtMultipleSorting: TXT driver service instantiated\n");
 
@@ -76,12 +91,12 @@ public class Activator implements BundleActivator
         Thread outerThread = new Thread("outer-loop-thread")
         {
             public void run()
-            {
-                System.out.println("AicasTxtMultipleSorting: waiting for new object ...");
+            {                
                 while (run)
                 {
                     try
                     {
+                        System.out.println("AicasTxtMultipleSorting: waiting for new object ...");
                         // wait until an object crosses the first light barrier
                         int motorCounter;
                         
@@ -95,7 +110,11 @@ public class Activator implements BundleActivator
                         workerRunnable.driverService = driverService;
                         workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
                         
+                        System.out.print("AicasTxtMultipleSorting: executing new worker");
+                        
                         executorService.execute(workerRunnable);
+                        
+                        System.out.print("AicasTxtMultipleSorting: executor called ");
 
 //                        ObjectWorkerThread objectWorkerThread = new ObjectWorkerThread(driverService, motorCounter);
 //                        workerSet.add(objectWorkerThread);

@@ -6,9 +6,18 @@ import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.Valve;
 
 public class AicasTxtStandardSortingLogic implements AicasTxtSortingLogic
 {
+    AicasTxtDriverInterface driverService;
+    
     @Override
-    public void doSort(DetectedColor color, int motorCounter, AicasTxtDriverInterface driverService)
+    public void doSort(DetectedColor color, int motorCounter)
     {
+        driverService = Activator.driverServiceTracker.getService();
+        
+        if (driverService == null) {
+            System.out.println("AicasTxtStandardSortingLogic: no driver service found");
+            return;
+        }
+        
         switch (color)
         {
         case WHITE:

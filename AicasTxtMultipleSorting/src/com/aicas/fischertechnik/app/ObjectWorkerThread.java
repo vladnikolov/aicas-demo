@@ -40,7 +40,6 @@ public class ObjectWorkerThread implements Runnable
 
     static final double SMOOTH_FACTOR = 0.125;
     
-    ServiceReference<AicasTxtSortingLogic> sortingLogicRef;
     AicasTxtSortingLogic sortingLogic;
 
     // public ObjectWorkerThread(AicasTxtDriverInterface driverService, int initialMotorCounter)
@@ -167,13 +166,20 @@ public class ObjectWorkerThread implements Runnable
 
         System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));
         
-        sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class);
-        if (sortingLogicRef != null) {
-            sortingLogic = Activator.context.getService(sortingLogicRef);
+//        sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class);
+//        if (sortingLogicRef != null) {
+//            sortingLogic = Activator.context.getService(sortingLogicRef);
+//        }
+        
+        sortingLogic = Activator.sortingServiceTracker.getService();
+        
+        if (sortingLogic == null) {
+            System.out.println(String.format("AicasTxtStandardSortingLogic: %s no sorting service found", name));
+            System.out.println(String.format("AicasTxtStandardSortingLogic: %s skipping sorting !", name));
         }
 
         // execute the exchangeable sorting logic
-        sortingLogic.doSort(detectedColor, motorCounter, driverService);
+        sortingLogic.doSort(detectedColor, motorCounter);
         
 //        switch (detectedColor)
 //        {
@@ -233,8 +239,6 @@ public class ObjectWorkerThread implements Runnable
             }
         }
         
-        Activator.context.ungetService(sortingLogicRef);
-        
-        System.out.println(String.format("AicasTxtMultipleSorting: %s ready!\n\n\n", name));
+        System.out.println(String.format("AicasTxtMultipleSorting: %s ready !\n\n\n", name));
     }
 }

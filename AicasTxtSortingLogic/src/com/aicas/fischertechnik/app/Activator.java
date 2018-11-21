@@ -2,12 +2,16 @@ package com.aicas.fischertechnik.app;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
+import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 
 public class Activator implements BundleActivator {
 
 	private static BundleContext context;
+	
+	static ServiceTracker<AicasTxtDriverInterface, AicasTxtDriverInterface> driverServiceTracker;
 
 	static BundleContext getContext() {
 		return context;
@@ -19,6 +23,12 @@ public class Activator implements BundleActivator {
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 		Activator.context = bundleContext;
+		
+		driverServiceTracker = new ServiceTracker<AicasTxtDriverInterface, AicasTxtDriverInterface>
+		    (bundleContext, AicasTxtDriverInterface.class, null);
+		
+		driverServiceTracker.open();
+		
 		context.registerService(AicasTxtSortingLogic.class, new AicasTxtStandardSortingLogic(), null);
 		
 		// get the driverService instead of assigning it

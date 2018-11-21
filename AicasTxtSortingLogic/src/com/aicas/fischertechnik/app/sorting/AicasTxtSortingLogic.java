@@ -1,7 +1,5 @@
 package com.aicas.fischertechnik.app.sorting;
 
-import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
-
 public interface AicasTxtSortingLogic
 {
     enum DetectedColor
@@ -9,5 +7,5 @@ public interface AicasTxtSortingLogic
         WHITE, RED, BLUE, NONE
     }
     
-    void doSort(DetectedColor color, int motorCounter, AicasTxtDriverInterface driverService);
+    void doSort(DetectedColor color, int motorCounter);
 }
