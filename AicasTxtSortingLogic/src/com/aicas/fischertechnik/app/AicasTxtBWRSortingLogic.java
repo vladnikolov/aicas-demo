@@ -13,7 +13,7 @@ public class AicasTxtBWRSortingLogic implements AicasTxtSortingLogic
     {
         driverService = Activator.driverServiceTracker.getService();
         
-        if (driverService == null) {
+        if (driverService == null) { 
             System.out.println("AicasTxtStandardSortingLogic: no driver service found");
             return;
         }
