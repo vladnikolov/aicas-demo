@@ -9,7 +9,7 @@ public class AicasTxtBWRSortingLogic implements AicasTxtSortingLogic
     AicasTxtDriverInterface driverService;
     
     @Override
-    public void doSort(DetectedColor color, int motorCounter)
+    public void doSort(DetectedColor color, int motorCounter) throws InterruptedException
     {
         driverService = Activator.driverServiceTracker.getService();
         
@@ -21,15 +21,15 @@ public class AicasTxtBWRSortingLogic implements AicasTxtSortingLogic
         switch (color)
         {
         case BLUE:
-            while (driverService.getMotorCounter() < motorCounter + 1);
+            while (driverService.getMotorCounter() < motorCounter + 1) {Thread.sleep(10);};
             driverService.activateValve(Valve.WHITE);
             break;
         case WHITE:
-            while (driverService.getMotorCounter() < motorCounter + 6);
+            while (driverService.getMotorCounter() < motorCounter + 6) {Thread.sleep(10);};
             driverService.activateValve(Valve.RED);
             break;
         case RED:
-            while (driverService.getMotorCounter() < motorCounter + 11);
+            while (driverService.getMotorCounter() < motorCounter + 11) {Thread.sleep(10);};
             driverService.activateValve(Valve.BLUE);
             break;
         case NONE:

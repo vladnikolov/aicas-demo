@@ -26,7 +26,7 @@ public class Activator implements BundleActivator
 
     AicasTxtDriverInterface driverService;
     
-//    static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
+    static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
 //    
 //    ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceCustomizer = 
 //            new ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic>() {
@@ -89,10 +89,10 @@ public class Activator implements BundleActivator
     {
         Activator.context = bundleContext;
         
-//        sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
-//            (bundleContext, AicasTxtSortingLogic.class, null);
-//    
-//        sortingServiceTracker.open();
+        sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
+            (bundleContext, AicasTxtSortingLogic.class, null);
+    
+        sortingServiceTracker.open();
 
         System.out.println("-----------------------------------------------------------");
         System.out.println("-             aicas multiple sorting application          -");
@@ -129,6 +129,14 @@ public class Activator implements BundleActivator
                         int motorCounter;
                         
                         while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            try
+                            {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e)
+                            {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
                             continue;
                         }
 
@@ -138,11 +146,7 @@ public class Activator implements BundleActivator
                         workerRunnable.driverService = driverService;
                         workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
                         
-                        System.out.print("AicasTxtMultipleSorting: executing new worker");
-                        
                         executorService.execute(workerRunnable);
-                        
-                        System.out.print("AicasTxtMultipleSorting: executor called ");
 
 //                        ObjectWorkerThread objectWorkerThread = new ObjectWorkerThread(driverService, motorCounter);
 //                        workerSet.add(objectWorkerThread);
@@ -151,10 +155,26 @@ public class Activator implements BundleActivator
                         
                         while(driverService.getMotorCounter() < motorCounter + 2) {
                             /** wait until object leaves the first light barrier **/
+                            try
+                            {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e)
+                            {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
                         }
                         
-                        // wait for the object to leave the sensor region, otherwise we create several worker threads
+                        // wait for the object to leave the light barrier region, otherwise we create several worker threads
                         while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            try
+                            {
+                                Thread.sleep(10);
+                            } catch (InterruptedException e)
+                            {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
                             continue;
                         }
 

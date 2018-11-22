@@ -26,19 +26,24 @@ public class ObjectWorkerThread implements Runnable
 //        WHITE, RED, BLUE, NONE
 //    }
 
+//    static final int DISTANCE_SAMPLING_REGION_START = 8;
+//    static final int DISTANCE_SAMPLING_REGION_END = 9;
+    
     static final int DISTANCE_SAMPLING_REGION_START = 8;
     static final int DISTANCE_SAMPLING_REGION_END = 9;
+    
     static final int DISTANCE_LIGHT_BARRIER_EJECTION= 14;
     static final int DISTANCE_VALVE_WHITE = 18;
     static final int DISTANCE_VALVE_RED = 24;
     static final int DISTANCE_VALVE_BLUE = 29;
     
 
-    static final int COLOR_THRESHOLD_WHITE = 1190; // 1390
+    static final int COLOR_THRESHOLD_WHITE = 1100; // 1390
     static final int COLOR_THRESHOLD_RED = 1500;   // 1600
     static final int COLOR_THRESHOLD_BLUE = 1800;
 
-    static final double SMOOTH_FACTOR = 0.125;
+    // static final double SMOOTH_FACTOR = 0.25;
+    static final double SMOOTH_FACTOR = 0.5;
     
     AicasTxtSortingLogic sortingLogic;
 
@@ -59,6 +64,14 @@ public class ObjectWorkerThread implements Runnable
         System.out.println(String.format("AicasTxtMultipleSorting: %s initial motor counter is = %d", name,
                 initialMotorCounter));
 
+//        ServiceReference<AicasTxtSortingLogic> sortingLogicRef; 
+//        int query_cnt = 0;
+//        for (sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class) ;
+//                (sortingLogicRef == null) && (query_cnt < 5);
+//                sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class), query_cnt++); 
+        
+        sortingLogic = Activator.sortingServiceTracker.getService();
+        
         // activate the motor of the supply line
         if (!motorStarted)
         {
@@ -69,6 +82,14 @@ public class ObjectWorkerThread implements Runnable
         // wait until the object left out of the first light barrier
         while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR))
         {
+            try
+            {
+                Thread.sleep(10);
+            } catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             continue;
         }
 
@@ -86,6 +107,14 @@ public class ObjectWorkerThread implements Runnable
 
         while (driverService.getMotorCounter() < colorSampleRegionIn)
         {
+            try
+            {
+                Thread.sleep(10);
+            } catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             continue;
         }
 
@@ -103,9 +132,9 @@ public class ObjectWorkerThread implements Runnable
             System.out.println(String.format("%s color val = %d", name, val));            
 //            if ((out_cnt % 10) == 0)
 //                System.out.print(". ");
-            colorSensorValue = (int) (driverService.getColorSensorValue() * SMOOTH_FACTOR + colorSensorValue * (1 - SMOOTH_FACTOR));
+            colorSensorValue = (int) (val * SMOOTH_FACTOR + colorSensorValue * (1 - SMOOTH_FACTOR));
             System.out.println(String.format("%s colorSensorValue = %d", name, colorSensorValue));
-            out_cnt++;
+            // out_cnt++;
         }
         System.out.println();
         System.out.println(String.format("AicasTxtMultipleSorting: %s sampled color value %d", name,
@@ -131,12 +160,28 @@ public class ObjectWorkerThread implements Runnable
         // wait until the according object proceeds to proximity of the ejection light barrier
         while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_LIGHT_BARRIER_EJECTION)
         {
+            try
+            {
+                Thread.sleep(10);
+            } catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             continue;
         }
         
         // wait until the object crosses the ejection light barrier 
         while (driverService.getLightBarrierState(LightBarrier.EJECTION))
         {
+            try
+            {
+                Thread.sleep(10);
+            } catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             continue;
         }
 
@@ -151,16 +196,18 @@ public class ObjectWorkerThread implements Runnable
             driverService.activateCompressor();
             compressorActivated = true;
         }
-        
-        ServiceReference<AicasTxtSortingLogic> sortingLogicRef; 
-        int query_cnt = 0;
-        for (sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class) ;
-                (sortingLogicRef == null) && (query_cnt < 5);
-                sortingLogicRef = Activator.context.getServiceReference(AicasTxtSortingLogic.class), query_cnt++); 
 
         // wait until the object left out of the eject light barrier
         while (!driverService.getLightBarrierState(LightBarrier.EJECTION))
         {
+            try
+            {
+                Thread.sleep(10);
+            } catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
             continue;
         }
 
@@ -168,18 +215,23 @@ public class ObjectWorkerThread implements Runnable
         // ejection valve
         motorCounter = driverService.getMotorCounter();
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));               
+        System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));         
         
-        if (sortingLogicRef != null) {
-         // execute the exchangeable sorting logic
-            sortingLogic = Activator.context.getService(sortingLogicRef);            
-        } else {
-            System.out.println(String.format("AicasTxtStandardSortingLogic: %s no sorting service found", name));
-            System.out.println(String.format("AicasTxtStandardSortingLogic: %s skipping sorting !", name));
+        if(sortingLogic == null) {
+            sortingLogic = Activator.sortingServiceTracker.getService();
         }
         
         if (sortingLogic != null) {
-            sortingLogic.doSort(detectedColor, motorCounter);
+            try
+            {
+                sortingLogic.doSort(detectedColor, motorCounter);
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println(String.format("AicasTxtStandardSortingLogic: %s no sorting service found", name));
+            System.out.println(String.format("AicasTxtStandardSortingLogic: %s skipping sorting !", name));
         }
         
         // sortingLogic = Activator.sortingServiceTracker.getService();

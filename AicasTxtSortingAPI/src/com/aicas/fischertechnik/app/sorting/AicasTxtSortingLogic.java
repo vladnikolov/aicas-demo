@@ -7,5 +7,5 @@ public interface AicasTxtSortingLogic
         WHITE, RED, BLUE, NONE
     }
     
-    void doSort(DetectedColor color, int motorCounter);
+    void doSort(DetectedColor color, int motorCounter) throws InterruptedException;
 }
