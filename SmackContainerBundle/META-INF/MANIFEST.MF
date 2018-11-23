@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: SmackContainerBundle
+Bundle-SymbolicName: SmackContainerBundle
+Bundle-Version: 1.0.0
+Bundle-ClassPath: 
+ jxmpp-core-0.4.2.jar,
+ jxmpp-util-cache-0.4.2.jar,
+ smack-core-4.1.5.jar,
+ smack-extensions-4.1.5.jar,
+ smack-im-4.1.5.jar,
+ smack-java7-4.1.5.jar,
+ smack-sasl-provided-4.1.5.jar,
+ smack-tcp-4.1.5.jar,
+ xpp3-1.1.4c.jar,
+ .
+Automatic-Module-Name: SmackContainerBundle
+Export-Package: 
+    org.jivesoftware.smack,
+    org.jivesoftware.smack.packet,
+    org.jivesoftware.smackx.muc

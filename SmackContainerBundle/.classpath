@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="jxmpp-core-0.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="jxmpp-util-cache-0.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="smack-core-4.1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="smack-extensions-4.1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="smack-im-4.1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="smack-java7-4.1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="smack-sasl-provided-4.1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="smack-tcp-4.1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="xpp3-1.1.4c.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
