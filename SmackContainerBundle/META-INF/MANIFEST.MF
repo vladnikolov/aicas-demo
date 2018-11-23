@@ -18,4 +18,11 @@ Automatic-Module-Name: SmackContainerBundle
 Export-Package: 
     org.jivesoftware.smack,
     org.jivesoftware.smack.packet,
-    org.jivesoftware.smackx.muc
+    org.jivesoftware.smackx.muc,
+    org.jivesoftware.smack.tcp
+Import-Package: javax.net.ssl,
+ javax.net,
+ javax.crypto,
+ javax.crypto.spec,
+ org.osgi.framework
+Bundle-Activator: com.aicas.jamaica.iot.smack.SmackActivator

@@ -9,20 +9,22 @@
 	<property name="version" value="1.0.0" />
 	<property name="dependency-driver" value="../AicasTxtDriverBundle/bin" />
     <property name="dependency-sorting-api" value="../AicasTxtSortingAPI/bin" />
+	<property name="smack-api" value="../SmackContainerBundle" />
 
 	<path id="project.class.path">
 		<pathelement path="${rt.class.path}" />
 		<pathelement path="${osgi-api}"/>
 		<pathelement path="${dependency-driver}"/>
 		<pathelement path="${dependency-sorting-api}"/>
+       <fileset dir="${smack-api}">
+            <include name="**/*.jar" />
+        </fileset>
 		<!-- <pathelement path="${my.class.path}" /> -->
 	</path>
 
 	<!-- example for including a fileset to classpath
 	<path id="my.class.path">
-		<fileset dir="<my-dir-location>">
-			<include name="**/*.*" />
-		</fileset>
+
 	</path>
 	-->
 

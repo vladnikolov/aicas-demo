@@ -2,16 +2,15 @@ package com.aicas.fischertechnik.app;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.SortingFocusTraversalPolicy;
-
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
@@ -27,6 +26,9 @@ public class Activator implements BundleActivator
     AicasTxtDriverInterface driverService;
     
     static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
+    
+    static MultiUserChat multiUserChat;
+    AbstractXMPPConnection connection;
 //    
 //    ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceCustomizer = 
 //            new ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic>() {
@@ -89,6 +91,11 @@ public class Activator implements BundleActivator
     {
         Activator.context = bundleContext;
         
+        connection = XMPPClient.connect("colorsortingguisender", "password");
+        MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
+        multiUserChat = multiUserChatManager.getMultiUserChat("muc@conference.es-0226.aicas.burg");
+        multiUserChat.createOrJoin("sender");
+        
         sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
             (bundleContext, AicasTxtSortingLogic.class, null);
     
@@ -110,6 +117,7 @@ public class Activator implements BundleActivator
         System.out.println("AicasTxtMultipleSorting: TXT driver service instantiated\n");
 
         driverService.stopMotor(1);
+        
         driverService.stopCompressor();
 
         // TODO: make as real-time thread
@@ -139,6 +147,8 @@ public class Activator implements BundleActivator
                             }
                             continue;
                         }
+                        
+//                        Activator.multiUserChat.sendMessage("LightBarrier.ColorSensor : true");
 
                         motorCounter = driverService.getMotorCounter();
                         ObjectWorkerThread workerRunnable = new ObjectWorkerThread();
@@ -205,6 +215,7 @@ public class Activator implements BundleActivator
         executorService.shutdown();
         executorService.awaitTermination(7, TimeUnit.SECONDS);
         // sortingServiceTracker.close();
+        connection.disconnect();
     }
 
 }

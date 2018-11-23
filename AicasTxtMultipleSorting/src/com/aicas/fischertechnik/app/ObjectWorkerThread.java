@@ -1,5 +1,6 @@
 package com.aicas.fischertechnik.app;
 
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.osgi.framework.ServiceReference;
 
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
@@ -77,6 +78,15 @@ public class ObjectWorkerThread implements Runnable
         {
             driverService.rotateMotor(1, 1, 512, 0);
             motorStarted = true;
+            try
+            {
+                Activator.multiUserChat.sendMessage("Motor.Rotating : true");
+                Activator.multiUserChat.sendMessage("Motor.Direction : 1");
+                Activator.multiUserChat.sendMessage("Motor.Speed : 512");
+                Activator.multiUserChat.sendMessage("Motor.Counter : " + initialMotorCounter);
+            } catch (NotConnectedException e)
+            {
+            }
         }
 
         // wait until the object left out of the first light barrier
@@ -93,6 +103,14 @@ public class ObjectWorkerThread implements Runnable
             continue;
         }
 
+//        try
+//        {
+//            Activator.multiUserChat.sendMessage("LightBarrier.ColorSensor : false");
+//        } catch (NotConnectedException e1)
+//        {
+//            e1.printStackTrace();
+//        }
+        
         System.out.println(
                 String.format("AicasTxtMultipleSorting: %s left first light barrier with motor counter = %d",
                         name, driverService.getMotorCounter()));
@@ -104,19 +122,31 @@ public class ObjectWorkerThread implements Runnable
 
         int colorSampleRegionIn = initialMotorCounter + DISTANCE_SAMPLING_REGION_START;
         int colorSampleRegionOut = initialMotorCounter + DISTANCE_SAMPLING_REGION_END;
+        
+        int cnt;
 
-        while (driverService.getMotorCounter() < colorSampleRegionIn)
+        while ((cnt = driverService.getMotorCounter()) < colorSampleRegionIn)
         {
             try
-            {
+            {                
                 Thread.sleep(10);
             } catch (InterruptedException e)
             {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
+            } 
+            
             continue;
         }
+        
+//        try
+//        {
+//            Activator.multiUserChat.sendMessage("Motor.Counter : " + cnt);
+//        } catch (NotConnectedException e2)
+//        {
+//            // TODO Auto-generated catch block
+//            e2.printStackTrace();
+//        }
 
         // measure an exponentially smoothed object color value
 
@@ -158,7 +188,7 @@ public class ObjectWorkerThread implements Runnable
                 String.format("AicasTxtMultipleSorting: %s detected object color %s", name, detectedColor));
 
         // wait until the according object proceeds to proximity of the ejection light barrier
-        while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_LIGHT_BARRIER_EJECTION)
+        while ((cnt = driverService.getMotorCounter()) < initialMotorCounter + DISTANCE_LIGHT_BARRIER_EJECTION)
         {
             try
             {
@@ -167,9 +197,18 @@ public class ObjectWorkerThread implements Runnable
             {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
+            } 
             continue;
         }
+        
+//        try
+//        {
+//            Activator.multiUserChat.sendMessage("Motor.Counter : " + cnt);
+//        } catch (NotConnectedException e2)
+//        {
+//            // TODO Auto-generated catch block
+//            e2.printStackTrace();
+//        }
         
         // wait until the object crosses the ejection light barrier 
         while (driverService.getLightBarrierState(LightBarrier.EJECTION))
@@ -185,6 +224,15 @@ public class ObjectWorkerThread implements Runnable
             continue;
         }
 
+//        try
+//        {
+//            Activator.multiUserChat.sendMessage("LightBarrier.Ejection : true");
+//        } catch (NotConnectedException e1)
+//        {
+//            // TODO Auto-generated catch block
+//            e1.printStackTrace();
+//        }
+        
 //        System.out.println(String.format("AicasTxtMultipleSorting: %s crossed EJECTION barrier with motor counter = %d",
 //                name, driverService.getMotorCounter()));
 
@@ -210,6 +258,15 @@ public class ObjectWorkerThread implements Runnable
             }
             continue;
         }
+        
+//        try
+//        {
+//            Activator.multiUserChat.sendMessage("LightBarrier.Ejection : false");
+//        } catch (NotConnectedException e1)
+//        {
+//            // TODO Auto-generated catch block
+//            e1.printStackTrace();
+//        }
 
         // get the actual motor counter to compute the distance to the according
         // ejection valve
@@ -291,6 +348,17 @@ public class ObjectWorkerThread implements Runnable
             {
                 driverService.stopMotor(1);
                 motorStarted = false;
+                try
+                {
+                    Activator.multiUserChat.sendMessage("Motor.Rotating : false");
+                    Activator.multiUserChat.sendMessage("Motor.Direction : 0");
+                    Activator.multiUserChat.sendMessage("Motor.Speed : 0");
+                    Activator.multiUserChat.sendMessage("Motor.Counter : " + driverService.getMotorCounter());
+                } catch (NotConnectedException e)
+                {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         }
         
