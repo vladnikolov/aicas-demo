@@ -1,5 +1,9 @@
 package com.aicas.fischertechnik.app;
 
+import org.jivesoftware.smack.AbstractXMPPConnection;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -19,9 +23,11 @@ public class Activator implements BundleActivator {
     static final int SAMPLING_REGION_START = 8;
     static final int SAMPLING_REGION_END = 9;
     
-    static final int COLOR_THRESHOLD_WHITE = 1000;
-    static final int COLOR_THRESHOLD_RED = 1400;
+    static final int COLOR_THRESHOLD_WHITE = 1100;
+    static final int COLOR_THRESHOLD_RED = 1500;
     static final int COLOR_THRESHOLD_BLUE = 1800;
+    
+    static final double SMOOTH_FACTOR = 0.5;
 
     private boolean run = true;
 
@@ -33,12 +39,20 @@ public class Activator implements BundleActivator {
 	    WHITE, RED, BLUE, NONE,
 	}
 	
+    static MultiUserChat multiUserChat;
+    AbstractXMPPConnection connection;
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
 	 */
 	public void start(BundleContext bundleContext) throws Exception {
 	    Activator.context = bundleContext;
+	    
+        connection = XMPPClient.connect("colorsortingguisender", "password");
+        MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
+        multiUserChat = multiUserChatManager.getMultiUserChat("muc@conference.es-0226.aicas.burg");
+        multiUserChat.createOrJoin("sender");
 
         System.out.println("AicasTxtStandardSorting: starting");
 
@@ -50,6 +64,7 @@ public class Activator implements BundleActivator {
         System.out.println("AicasTxtStandardSorting: TXT driver service instantiated\n");
         
         driverService.stopMotor(1);
+        driverService.stopCompressor();
 
         // TODO: make as real-time thread
         new Thread()
@@ -69,6 +84,7 @@ public class Activator implements BundleActivator {
                         
                         // wait until an object crosses the first light barrier
                         while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            Thread.sleep(10);
                             continue;
                         }
                         
@@ -82,8 +98,14 @@ public class Activator implements BundleActivator {
                         
                         // wait until the object left out of the first light barrier
                         while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            Thread.sleep(10);
                             continue;
                         }            
+                        
+                        Activator.multiUserChat.sendMessage("Motor.Rotating : true");
+                        Activator.multiUserChat.sendMessage("Motor.Direction : 1");
+                        Activator.multiUserChat.sendMessage("Motor.Speed : 512");
+                        Activator.multiUserChat.sendMessage("Motor.Counter : " + motorCounter);
                       
                         int colorSensorValue = 0;
                         DetectedColor detectedColor = DetectedColor.NONE;
@@ -94,6 +116,7 @@ public class Activator implements BundleActivator {
                         int colorSampleRegionOut = motorCounter + SAMPLING_REGION_END;
                         
                         while (driverService.getMotorCounter() < colorSampleRegionIn) {
+                            Thread.sleep(10);
                             continue;
                         }
                                                 
@@ -102,18 +125,12 @@ public class Activator implements BundleActivator {
                         // get first sample as history
                         colorSensorValue = driverService.getColorSensorValue();
                         
-                        int out_cnt = 0;
-                        
                         // sample and smooth to approximate color value
                         while (driverService.getMotorCounter() < colorSampleRegionOut) {
                             int val = driverService.getColorSensorValue();
-                            // System.out.println("color val = " + val);
-                            if ((out_cnt % 10) == 0) System.out.println(". ");
-                            // System.out.print(". ");
-                            // smooth factor is = 0.35
-                            colorSensorValue = (int) (driverService.getColorSensorValue() * 0.35 + colorSensorValue * 0.65);
-                            // System.out.println("AicasTxtStandardSorting: colorSensorValue = " + colorSensorValue);
-                            out_cnt++;
+                            System.out.println("sampled color value = " + val);
+                            colorSensorValue = (int) (driverService.getColorSensorValue() * SMOOTH_FACTOR + colorSensorValue * (1 - SMOOTH_FACTOR));
+                            System.out.println("smoothed colorSensorValue = " + colorSensorValue);
                         }
                         System.out.println();
                         System.out.println("AicasTxtStandardSorting: approximated color value " + colorSensorValue);
@@ -133,6 +150,7 @@ public class Activator implements BundleActivator {
                         
                         // wait until the object crosses the light barrier of the eject part
                         while (driverService.getLightBarrierState(LightBarrier.EJECTION)) {
+                            Thread.sleep(10);
                             continue;
                         }
                         
@@ -143,6 +161,7 @@ public class Activator implements BundleActivator {
                         
                         // wait until the object left out of the eject light barrier
                         while (!driverService.getLightBarrierState(LightBarrier.EJECTION)) {
+                            Thread.sleep(10);
                             continue;
                         }   
                         
@@ -176,6 +195,11 @@ public class Activator implements BundleActivator {
                         // stop the motor
                         driverService.stopMotor(1);
                         
+                        multiUserChat.sendMessage("Motor.Rotating : false");
+                        multiUserChat.sendMessage("Motor.Direction : 0");
+                        multiUserChat.sendMessage("Motor.Speed : 0");
+                        multiUserChat.sendMessage("Motor.Counter : " + driverService.getMotorCounter());
+                        
                         // loop waiting for next object
                     } 
                     catch (Exception e)
@@ -194,6 +218,7 @@ public class Activator implements BundleActivator {
 	public void stop(BundleContext bundleContext) throws Exception {
 		Activator.context = null;
 		run = false;
+		connection.disconnect();
 	}
 
 }

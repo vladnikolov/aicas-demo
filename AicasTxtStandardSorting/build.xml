@@ -8,11 +8,15 @@
 	<property name="osgi-api" location="../osgi-core/osgi.core-6.0.0.jar" />
 	<property name="version" value="1.0.0" />
 	<property name="dependency-path" value="../AicasTxtDriverBundle/bin" />
+	<property name="smack-api" value="../SmackContainerBundle" />
 
 	<path id="project.class.path">
 		<pathelement path="${rt.class.path}" />
 		<pathelement path="${osgi-api}"/>
 		<pathelement path="${dependency-path}"/>
+		<fileset dir="${smack-api}">
+			<include name="**/*.jar" />
+		</fileset>
 		<!-- <pathelement path="${my.class.path}" /> -->
 	</path>
 
@@ -31,11 +35,11 @@
 	<target name="cleanbuild" depends="clean,init,compile" />
 
 	<target name="compile" depends="init">
-			<javac fork="yes" executable="${javac}" srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" verbose="true" debuglevel="source,lines,vars">
-				<src path="${src}"/>
-				<classpath refid="project.class.path" />
-			</javac>
-		</target>
+		<javac fork="yes" executable="${javac}" srcdir="${src}" destdir="${build}" includeantruntime="false" debug="true" verbose="true" debuglevel="source,lines,vars">
+			<src path="${src}"/>
+			<classpath refid="project.class.path" />
+		</javac>
+	</target>
 
 	<target name="clean">
 		<delete dir="${build}" />
