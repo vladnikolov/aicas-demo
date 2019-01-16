@@ -4,6 +4,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.realtime.PeriodicParameters;
+import javax.realtime.PriorityParameters;
+import javax.realtime.PriorityScheduler;
+import javax.realtime.RealtimeThread;
+import javax.realtime.RelativeTime;
+
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
@@ -70,6 +76,9 @@ public class Activator implements BundleActivator
 //        }
 //    });
     
+    // TODO: implement a custom ThreadPoolExecutor for RT object worker threads 
+    // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ThreadPoolExecutor.html
+    
     ExecutorService executorService = Executors.newFixedThreadPool(7);
     
     int workerThreadCounter = 0;
@@ -119,77 +128,64 @@ public class Activator implements BundleActivator
         driverService.stopMotor(1);
         
         driverService.stopCompressor();
-
-        // TODO: make as real-time thread
-//        RealtimeThread outerThread = new RealtimeThread(
-//                new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3), 
-//                new PeriodicParameters(new RelativeTime(250, 0)))        
-        Thread outerThread = new Thread("outer-loop-thread")
-        {
+        
+        RealtimeThread outerThread = new RealtimeThread(
+                // TODO: set a proper outer thread priority (higher as workers, since this one creates workers)
+                new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3), 
+                // TODO: set a proper outer thread period (4-time a second might be sufficient)
+                new PeriodicParameters(new RelativeTime(250, 0))) {
+            
+            boolean newObjectDetected = false;
+            
             public void run()
-            {                
+            {
+                System.out.println("AicasTxtMultipleSorting: waiting for new object ...");
+                
                 while (run)
                 {
                     try
                     {
-                        System.out.println("AicasTxtMultipleSorting: waiting for new object ...");
-                        // wait until an object crosses the first light barrier
                         int motorCounter;
                         
-                        while (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
-                            try
-                            {
-                                Thread.sleep(10);
-                            } catch (InterruptedException e)
-                            {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
+                        // wait until an object crosses the first light barrier
+                        
+                        // if the light barrier is on (not crossed)
+                        if (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            // if an object was already detected 
+                            if(newObjectDetected) {
+                                // it just left the color sensor barrier
+                                newObjectDetected = false;
+                            } else {
+                                // otherwise there is no object, just skip any action
                             }
-                            continue;
                         }
-                        
-//                        Activator.multiUserChat.sendMessage("LightBarrier.ColorSensor : true");
+                        // if light barrier is off (crossed)
+                        else if (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
+                            if (newObjectDetected) {
+                                // object already detected but still intercepts the barrier
+                                // do nothing, wait until it moves forward
+                            } else {
+                                // we just detected a new object
+                                
+//                              Activator.multiUserChat.sendMessage("LightBarrier.ColorSensor : true");
 
-                        motorCounter = driverService.getMotorCounter();
-                        ObjectWorkerThread workerRunnable = new ObjectWorkerThread();
-                        workerRunnable.initialMotorCounter = motorCounter;
-                        workerRunnable.driverService = driverService;
-                        workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
-                        
-                        executorService.execute(workerRunnable);
-
-//                        ObjectWorkerThread objectWorkerThread = new ObjectWorkerThread(driverService, motorCounter);
-//                        workerSet.add(objectWorkerThread);
-//                        objectWorkerThread.setName("WorkerThread-" + ++workerThreadCounter);
-//                        objectWorkerThread.start();
-                        
-                        while(driverService.getMotorCounter() < motorCounter + 2) {
-                            /** wait until object leaves the first light barrier **/
-                            try
-                            {
-                                Thread.sleep(10);
-                            } catch (InterruptedException e)
-                            {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
+                                motorCounter = driverService.getMotorCounter();
+                                ObjectWorkerThread workerRunnable = new ObjectWorkerThread();
+                                workerRunnable.initialMotorCounter = motorCounter;
+                                // TODO: all workers use the same service instance - is it thread safe?  
+                                workerRunnable.driverService = driverService;
+                                workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
+                                
+                                executorService.execute(workerRunnable);
+                                
+                                // TODO: profile cost of this worst case path
+                                //       use pure cpu costs measurement with real-time clocks (linux)
+                                //       plan the task cost and period accordingly
                             }
                         }
                         
-                        // wait for the object to leave the light barrier region, otherwise we create several worker threads
-                        while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
-                            try
-                            {
-                                Thread.sleep(10);
-                            } catch (InterruptedException e)
-                            {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                            continue;
-                        }
-
-                        // waitForNextPeriod();
-                        // loop waiting for next object
+                        // suspend until next period
+                        waitForNextPeriod();                        
                     } 
                     catch (Exception e)
                     {

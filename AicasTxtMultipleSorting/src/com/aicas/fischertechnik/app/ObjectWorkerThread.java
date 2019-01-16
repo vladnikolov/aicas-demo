@@ -8,8 +8,11 @@ import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic.DetectedColor;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
 
-// public class ObjectWorkerThread extends RealtimeThread
-// public class ObjectWorkerThread extends Thread
+// TODO: set-up RR scheduling for the worker threads
+// TODO: measure the pure cpu costs of the workers and their wall execution time 
+//       use costs for feasibility analysis - how much workers are possible in parallel at all ?
+// TODO: bind each thread to a processing group, with replenishing period 500 ms and interpolated costs for that.
+
 public class ObjectWorkerThread implements Runnable
 {
     public int initialMotorCounter;
