@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: AicasTxtMultipleSorting
-Bundle-SymbolicName: AicasTxtMultipleSorting
+Bundle-Name: AicasRealtimeSorting
+Bundle-SymbolicName: AicasRealtimeSorting
 Bundle-Version: 1.0.0
 Bundle-Activator: com.aicas.fischertechnik.app.Activator
 Import-Package: 
@@ -14,4 +14,4 @@ Import-Package:
     org.jivesoftware.smack.packet,
     org.jivesoftware.smackx.muc,
     org.jivesoftware.smack.tcp
-Automatic-Module-Name: AicasTxtMultipleSorting
+Automatic-Module-Name: AicasRealtimeSorting

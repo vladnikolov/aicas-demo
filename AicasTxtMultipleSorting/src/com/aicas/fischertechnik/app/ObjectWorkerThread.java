@@ -29,9 +29,6 @@ public class ObjectWorkerThread implements Runnable
 //    {
 //        WHITE, RED, BLUE, NONE
 //    }
-
-//    static final int DISTANCE_SAMPLING_REGION_START = 8;
-//    static final int DISTANCE_SAMPLING_REGION_END = 9;
     
     static final int DISTANCE_SAMPLING_REGION_START = 8;
     static final int DISTANCE_SAMPLING_REGION_END = 9;
@@ -64,8 +61,8 @@ public class ObjectWorkerThread implements Runnable
     public void run()
     {
         activeWorkers++;
-        System.out.println(String.format("AicasTxtMultipleSorting: %s new object detected!", name));
-        System.out.println(String.format("AicasTxtMultipleSorting: %s initial motor counter is = %d", name,
+        System.out.println(String.format("AicasRealtimeSorting: %s new object detected!", name));
+        System.out.println(String.format("AicasRealtimeSorting: %s initial motor counter is = %d", name,
                 initialMotorCounter));
 
 //        ServiceReference<AicasTxtSortingLogic> sortingLogicRef; 
@@ -97,7 +94,7 @@ public class ObjectWorkerThread implements Runnable
         {
             try
             {
-                Thread.sleep(10);
+                Thread.sleep(100);
             } catch (InterruptedException e)
             {
                 // TODO Auto-generated catch block
@@ -115,13 +112,13 @@ public class ObjectWorkerThread implements Runnable
 //        }
         
         System.out.println(
-                String.format("AicasTxtMultipleSorting: %s left first light barrier with motor counter = %d",
+                String.format("AicasRealtimeSorting: %s left first light barrier with motor counter = %d",
                         name, driverService.getMotorCounter()));
 
         int colorSensorValue = 0;
         DetectedColor detectedColor = DetectedColor.NONE;
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s sampling color value", name));
+        System.out.println(String.format("AicasRealtimeSorting: %s sampling color value", name));
 
         int colorSampleRegionIn = initialMotorCounter + DISTANCE_SAMPLING_REGION_START;
         int colorSampleRegionOut = initialMotorCounter + DISTANCE_SAMPLING_REGION_END;
@@ -132,7 +129,7 @@ public class ObjectWorkerThread implements Runnable
         {
             try
             {                
-                Thread.sleep(10);
+                Thread.sleep(100);
             } catch (InterruptedException e)
             {
                 // TODO Auto-generated catch block
@@ -170,7 +167,7 @@ public class ObjectWorkerThread implements Runnable
             // out_cnt++;
         }
         System.out.println();
-        System.out.println(String.format("AicasTxtMultipleSorting: %s sampled color value %d", name,
+        System.out.println(String.format("AicasRealtimeSorting: %s sampled color value %d", name,
                 colorSensorValue));
 
         // decide whether the object is white, red or blue        
@@ -188,14 +185,14 @@ public class ObjectWorkerThread implements Runnable
         }
 
         System.out.println(
-                String.format("AicasTxtMultipleSorting: %s detected object color %s", name, detectedColor));
+                String.format("AicasRealtimeSorting: %s detected object color %s", name, detectedColor));
 
         // wait until the according object proceeds to proximity of the ejection light barrier
         while ((cnt = driverService.getMotorCounter()) < initialMotorCounter + DISTANCE_LIGHT_BARRIER_EJECTION)
         {
             try
             {
-                Thread.sleep(10);
+                Thread.sleep(100);
             } catch (InterruptedException e)
             {
                 // TODO Auto-generated catch block
@@ -236,10 +233,10 @@ public class ObjectWorkerThread implements Runnable
 //            e1.printStackTrace();
 //        }
         
-//        System.out.println(String.format("AicasTxtMultipleSorting: %s crossed EJECTION barrier with motor counter = %d",
+//        System.out.println(String.format("AicasRealtimeSorting: %s crossed EJECTION barrier with motor counter = %d",
 //                name, driverService.getMotorCounter()));
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s preparing ejection for %s", name, detectedColor));
+        System.out.println(String.format("AicasRealtimeSorting: %s preparing ejection for %s", name, detectedColor));
         
         // in the mean time activate the compressor
         if (!compressorActivated)
@@ -253,7 +250,7 @@ public class ObjectWorkerThread implements Runnable
         {
             try
             {
-                Thread.sleep(10);
+                Thread.sleep(30);
             } catch (InterruptedException e)
             {
                 // TODO Auto-generated catch block
@@ -275,7 +272,7 @@ public class ObjectWorkerThread implements Runnable
         // ejection valve
         motorCounter = driverService.getMotorCounter();
 
-        System.out.println(String.format("AicasTxtMultipleSorting: %s activating valve %s ", name, detectedColor));         
+        System.out.println(String.format("AicasRealtimeSorting: %s activating valve %s ", name, detectedColor));         
         
         if(sortingLogic == null) {
             sortingLogic = Activator.sortingServiceTracker.getService();
@@ -365,6 +362,6 @@ public class ObjectWorkerThread implements Runnable
             }
         }
         
-        System.out.println(String.format("AicasTxtMultipleSorting: %s ready !\n\n\n", name));
+        System.out.println(String.format("AicasRealtimeSorting: %s ready !\n\n\n", name));
     }
 }
