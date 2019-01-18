@@ -1,8 +1,14 @@
 package com.aicas.fischertechnik.app;
 
+import javax.realtime.PeriodicParameters;
+import javax.realtime.ProcessingGroupParameters;
+import javax.realtime.RealtimeThread;
+import javax.xml.crypto.dsig.keyinfo.PGPData;
+
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.osgi.framework.ServiceReference;
 
+import com.aicas.fischertechnik.app.Activator.AperiodicWorkerExecutor;
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic.DetectedColor;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
@@ -43,18 +49,12 @@ public class ObjectWorkerThread implements Runnable
     static final int COLOR_THRESHOLD_RED = 1500;   // 1600
     static final int COLOR_THRESHOLD_BLUE = 1800;
 
-    // static final double SMOOTH_FACTOR = 0.25;
     static final double SMOOTH_FACTOR = 0.5;
     
     AicasTxtSortingLogic sortingLogic;
 
-    // public ObjectWorkerThread(AicasTxtDriverInterface driverService, int initialMotorCounter)
     public ObjectWorkerThread()
     {
-//        this.initialMotorCounter = initialMotorCounter;
-//        this.driverService = driverService;
-//        this.setSchedulingParameters(new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 2));
-//        this.setReleaseParameters(new AperiodicParameters());
     }
 
     @Override
@@ -89,27 +89,23 @@ public class ObjectWorkerThread implements Runnable
             }
         }
 
-        // wait until the object left out of the first light barrier
+        // wait until the object left out of the first light barrier!
+        // Note: here we use periodic check and sleep ... 
+        // this might continue for several server (pgp) periods of the worker (actually each 500 ms long)
         while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR))
         {
             try
             {
+                // give up control for some time (e.g. 100 ms = 5 checks per server period)                
                 Thread.sleep(100);
-            } catch (InterruptedException e)
-            {
-                // TODO Auto-generated catch block
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             continue;
         }
-
-//        try
-//        {
-//            Activator.multiUserChat.sendMessage("LightBarrier.ColorSensor : false");
-//        } catch (NotConnectedException e1)
-//        {
-//            e1.printStackTrace();
-//        }
+        
+        // Note: when we pass over here, workers server will most probably have almost full capacity
+        // since the previous checks to not cost so much
         
         System.out.println(
                 String.format("AicasRealtimeSorting: %s left first light barrier with motor counter = %d",
@@ -125,6 +121,7 @@ public class ObjectWorkerThread implements Runnable
         
         int cnt;
 
+        // periodic check and sleep ... same story as above
         while ((cnt = driverService.getMotorCounter()) < colorSampleRegionIn)
         {
             try
@@ -132,30 +129,19 @@ public class ObjectWorkerThread implements Runnable
                 Thread.sleep(100);
             } catch (InterruptedException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
-            } 
-            
+            }
             continue;
-        }
-        
-//        try
-//        {
-//            Activator.multiUserChat.sendMessage("Motor.Counter : " + cnt);
-//        } catch (NotConnectedException e2)
-//        {
-//            // TODO Auto-generated catch block
-//            e2.printStackTrace();
-//        }
+        }      
 
-        // measure an exponentially smoothed object color value
+        // we are in the color sampling region - measure an exponentially smoothed object color value
 
-        // initialize history with first sample value
+        // initialize the history with the first sampled value
         colorSensorValue = driverService.getColorSensorValue();
 
         int out_cnt = 0;
 
-        // sample and smooth to approximate color value
+        // sample and smooth to approximate the color value
         while (driverService.getMotorCounter() < colorSampleRegionOut)
         {
             int val = driverService.getColorSensorValue();
@@ -195,43 +181,23 @@ public class ObjectWorkerThread implements Runnable
                 Thread.sleep(100);
             } catch (InterruptedException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             } 
             continue;
-        }
+        }       
         
-//        try
-//        {
-//            Activator.multiUserChat.sendMessage("Motor.Counter : " + cnt);
-//        } catch (NotConnectedException e2)
-//        {
-//            // TODO Auto-generated catch block
-//            e2.printStackTrace();
-//        }
-        
-        // wait until the object crosses the ejection light barrier 
+        // periodic check and sleep - wait until the object crosses the ejection light barrier 
         while (driverService.getLightBarrierState(LightBarrier.EJECTION))
         {
             try
             {
-                Thread.sleep(10);
+                Thread.sleep(100);
             } catch (InterruptedException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             continue;
         }
-
-//        try
-//        {
-//            Activator.multiUserChat.sendMessage("LightBarrier.Ejection : true");
-//        } catch (NotConnectedException e1)
-//        {
-//            // TODO Auto-generated catch block
-//            e1.printStackTrace();
-//        }
         
 //        System.out.println(String.format("AicasRealtimeSorting: %s crossed EJECTION barrier with motor counter = %d",
 //                name, driverService.getMotorCounter()));
@@ -250,26 +216,16 @@ public class ObjectWorkerThread implements Runnable
         {
             try
             {
-                Thread.sleep(30);
+                // here we sample twice as often - in proximity of the ejection valves we have to be more precise
+                Thread.sleep(50);
             } catch (InterruptedException e)
             {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             continue;
-        }
-        
-//        try
-//        {
-//            Activator.multiUserChat.sendMessage("LightBarrier.Ejection : false");
-//        } catch (NotConnectedException e1)
-//        {
-//            // TODO Auto-generated catch block
-//            e1.printStackTrace();
-//        }
+        }       
 
-        // get the actual motor counter to compute the distance to the according
-        // ejection valve
+        // get the actual motor counter to compute the distance to the according ejection valve
         motorCounter = driverService.getMotorCounter();
 
         System.out.println(String.format("AicasRealtimeSorting: %s activating valve %s ", name, detectedColor));         
@@ -289,49 +245,11 @@ public class ObjectWorkerThread implements Runnable
         } else {
             System.out.println(String.format("AicasTxtStandardSortingLogic: %s no sorting service found", name));
             System.out.println(String.format("AicasTxtStandardSortingLogic: %s skipping sorting !", name));
-        }
-        
-        // sortingLogic = Activator.sortingServiceTracker.getService();
-        
-//        switch (detectedColor)
-//        {
-//        case WHITE:
-//            while (driverService.getMotorCounter() < motorCounter + 1);
-//            driverService.activateValve(Valve.WHITE);
-//            break;
-//        case RED:
-//            while (driverService.getMotorCounter() < motorCounter + 6);
-//            driverService.activateValve(Valve.RED);
-//            break;
-//        case BLUE:
-//            while (driverService.getMotorCounter() < motorCounter + 11);
-//            driverService.activateValve(Valve.BLUE);
-//            break;
-//        case NONE:
-//            System.err.println("impossible");
-//        };
-        
-        // obviously our motor counter gets a small additive drift.
-        // therefore better use the code above, since it syncs on the EJECTION light barrier
-//        switch (detectedColor)
-//        {
-//        case WHITE:
-//            while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_VALVE_WHITE);
-//            driverService.activateValve(Valve.WHITE);
-//            break;
-//        case RED:
-//            while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_VALVE_RED);
-//            driverService.activateValve(Valve.RED);
-//            break;
-//        case BLUE:
-//            while (driverService.getMotorCounter() < initialMotorCounter + DISTANCE_VALVE_BLUE);
-//            driverService.activateValve(Valve.BLUE);
-//            break;
-//        case NONE:
-//            System.err.println("impossible");
-//        };
+        }        
 
         activeWorkers--;
+        
+        // from here on we do not have to be time-lined
 
         // if this was the last object switch off compressor and motor
         if (activeWorkers == 0)
@@ -354,9 +272,7 @@ public class ObjectWorkerThread implements Runnable
                     Activator.multiUserChat.sendMessage("Motor.Direction : 0");
                     Activator.multiUserChat.sendMessage("Motor.Speed : 0");
                     Activator.multiUserChat.sendMessage("Motor.Counter : " + driverService.getMotorCounter());
-                } catch (NotConnectedException e)
-                {
-                    // TODO Auto-generated catch block
+                } catch (NotConnectedException e) {
                     e.printStackTrace();
                 }
             }

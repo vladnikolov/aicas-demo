@@ -1,8 +1,5 @@
 package com.aicas.fischertechnik.app;
 
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -42,33 +39,35 @@ public class Activator implements BundleActivator
     static MultiUserChat multiUserChat;
     AbstractXMPPConnection connection;
 
-    //    ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceCustomizer = 
-    //            new ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic>() {
-    //
-    //                @Override
-    //                public AicasTxtSortingLogic addingService(ServiceReference<AicasTxtSortingLogic> reference)
-    //                {
-    //                    @SuppressWarnings("unchecked")
-    //                    AicasTxtSortingLogic result = (AicasTxtSortingLogic) context.getService(reference);
-    //                    return result;
-    //                }
-    //
-    //                @Override
-    //                public void modifiedService(ServiceReference<AicasTxtSortingLogic> reference,
-    //                        AicasTxtSortingLogic service)
-    //                {
-    //                    // TODO Auto-generated method stub
+    // actually we do not need a service tracker customizer
+
+    //        ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceCustomizer = 
+    //                new ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic>() {
+    //    
+    //                    @Override
+    //                    public AicasTxtSortingLogic addingService(ServiceReference<AicasTxtSortingLogic> reference)
+    //                    {
+    //                        @SuppressWarnings("unchecked")
+    //                        AicasTxtSortingLogic result = (AicasTxtSortingLogic) context.getService(reference);
+    //                        return result;
+    //                    }
+    //    
+    //                    @Override
+    //                    public void modifiedService(ServiceReference<AicasTxtSortingLogic> reference,
+    //                            AicasTxtSortingLogic service)
+    //                    {
+    //                        // TODO Auto-generated method stub
+    //                        
+    //                    }
+    //    
+    //                    @Override
+    //                    public void removedService(ServiceReference<AicasTxtSortingLogic> reference,
+    //                            AicasTxtSortingLogic service)
+    //                    {
+    //                        context.ungetService(reference);
+    //                    }
     //                    
-    //                }
-    //
-    //                @Override
-    //                public void removedService(ServiceReference<AicasTxtSortingLogic> reference,
-    //                        AicasTxtSortingLogic service)
-    //                {
-    //                    context.ungetService(reference);
-    //                }
-    //                
-    //            };
+    //                };
 
     // ExecutorService executorService = Executors.newFixedThreadPool(7);
 
@@ -84,7 +83,7 @@ public class Activator implements BundleActivator
     //        }
     //    });    
 
-    // TODO: implement a custom ThreadPoolExecutor for RT object worker threads 
+    // Provide a custom ThreadPoolExecutor for RT object worker threads 
     // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ThreadPoolExecutor.html
 
     public class AperiodicWorkerExecutor extends ThreadPoolExecutor {
@@ -98,12 +97,12 @@ public class Activator implements BundleActivator
          * 10 % for Framework
          * 10 % outer periodic thread
          * 10 % non RT tasks
-         * 70 % for RT Workers controlling the line
+         * 70 % for RT Workers controlling the line - handled here
          * 
-         * Each RT worker is encapsulated within a (Deferrable) server (a PGP) with period a (in ms) and a cost (in ms),
+         * Each RT worker is encapsulated within a (Deferrable) server (a PGP) with period (in ms) and a cost (in ms),
          * i.e. a flat task:server = 1:1 model.
          * This ensures temporal isolation at one hand, but also preemption of eager workers at least with PGP period rate.
-         * The PGP period value can be adjusted to a smaller number of workers do not react timely on sensors or actuators. 
+         * The PGP period value can be adjusted to a smaller number if workers do not react timely on sensors or actuators. 
          * However, we expect that workers will occasionally block preserving a fifo exec order on the shared priority level.
          * Note that cost < period is assumed, otherwise one server could over-utilize the whole system CPU resources.
          * All worker threads execute at the same FIFO priority level, while the outer thread operates one level above.
@@ -113,13 +112,18 @@ public class Activator implements BundleActivator
         short rtCapacityInPercent = 70;
 
         // a common server period for all workers
-        int pgpPeriod = 500;
+        public static final int pgpPeriod = 500;
 
         // the overall available CPU capacity for the workers
-        int overalCapacity = (pgpPeriod * rtCapacityInPercent) / 100 ; 
-        
-        // the RT workers budget is equally divided between the maximum allowed parallel workers in the system 
-        int pgpCosts = overalCapacity / poolMaxSize;
+        int overallCapacity = (pgpPeriod * rtCapacityInPercent) / 100 ; 
+
+        /**
+         * Note: the overall RT workers budget is equally divided between the maximum in parallel allowed workers
+         * The following model applies: e.g. for gpPeriod = 500 ms => overallCapacity = 350 ms
+         * for poolMaxSize = 7 => pgpCosts = 50 ms => 10 % of system CPU bandwidth per worker 
+         */
+         
+        int pgpCosts = overallCapacity / poolMaxSize;
 
         int workersPriority = PriorityScheduler.instance().getMaxPriority() - 3;
 
@@ -201,6 +205,7 @@ public class Activator implements BundleActivator
 
         System.out.println("AicasRealtimeSorting: starting");
 
+        // start the executor service early, because we pre-start all core threads
         aperiodicExecutor = new AperiodicWorkerExecutor();
 
         System.out.println("AicasRealtimeSorting: querying TXT driver service");
@@ -215,10 +220,15 @@ public class Activator implements BundleActivator
 
         driverService.stopCompressor();
 
+        /**
+         * The outer thread basically samples the first light barrier for incoming objects.
+         * If a new object is detected, then the outer thread uses the executor to trigger further processing.
+         * The outer thread then waits until the object leaves the barrier before accepting other new objects. 
+         */
         RealtimeThread outerThread = new RealtimeThread(
-                // TODO: set a proper outer thread priority (higher as workers, since this one creates workers)
-                new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3), 
-                // TODO: set a proper outer thread period (4-time a second might be sufficient)
+                // the outer thread priority must be higher as of the workers, since it creates workers
+                new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 2), 
+                // set a proper outer thread period (4-time a second might be sufficient)
                 new PeriodicParameters(new RelativeTime(250, 0))) {
 
             boolean newObjectDetected = false;
@@ -233,8 +243,6 @@ public class Activator implements BundleActivator
                     {
                         int motorCounter;
 
-                        // wait until an object crosses the first light barrier
-
                         // if the light barrier is on (not crossed)
                         if (driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
                             // if an object was already detected 
@@ -242,10 +250,10 @@ public class Activator implements BundleActivator
                                 // it just left the color sensor barrier
                                 newObjectDetected = false;
                             } else {
-                                // otherwise there is no object, just skip any action
+                                // there is no object, just skip any action
                             }
                         }
-                        // if light barrier is off (crossed)
+                        // if the light barrier is off (crossed)
                         else if (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR)) {
                             if (newObjectDetected) {
                                 // object already detected but still intercepts the barrier
@@ -263,7 +271,12 @@ public class Activator implements BundleActivator
                                 workerRunnable.driverService = driverService;
                                 workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
 
-                                aperiodicExecutor.execute(workerRunnable);
+                                // if we reached poolMaxSize of objects we can not process this object
+                                if(aperiodicExecutor.getActiveCount() == aperiodicExecutor.getMaximumPoolSize()) {
+                                    System.err.println("AicasRealtimeSorting: object detected but cannot be processed: no workers!");
+                                } else {
+                                    aperiodicExecutor.execute(workerRunnable);
+                                }
 
                                 // TODO: profile cost of this worst case path
                                 //       use pure cpu costs measurement with real-time clocks (linux)
