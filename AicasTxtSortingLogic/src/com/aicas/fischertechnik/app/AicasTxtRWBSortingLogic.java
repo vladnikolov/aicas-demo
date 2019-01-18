@@ -21,15 +21,15 @@ public class AicasTxtRWBSortingLogic implements AicasTxtSortingLogic
         switch (color)
         {
         case RED:
-            while (driverService.getMotorCounter() < motorCounter + 1) {Thread.sleep(10);};
+            while (driverService.getMotorCounter() < motorCounter + 1) {Thread.sleep(Activator.sleepDuration);};
             driverService.activateValve(Valve.WHITE);
             break;
         case WHITE:
-            while (driverService.getMotorCounter() < motorCounter + 6) {Thread.sleep(10);};
+            while (driverService.getMotorCounter() < motorCounter + 6) {Thread.sleep(Activator.sleepDuration);};
             driverService.activateValve(Valve.RED);
             break;
         case BLUE:
-            while (driverService.getMotorCounter() < motorCounter + 11){Thread.sleep(10);};
+            while (driverService.getMotorCounter() < motorCounter + 11){Thread.sleep(Activator.sleepDuration);};
             driverService.activateValve(Valve.BLUE);
             break;
         case NONE:

@@ -10,6 +10,12 @@ import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 public class Activator implements BundleActivator {
 
 	private static BundleContext context;
+
+	// set up a sleep duration for the worker, while waiting for the object to approach to its ejection valve 
+	// Note: since we sync against the motor counter, which is sampled with 25 Hz (i.e. 40 ms period),
+	// we need to detect each motor counter change
+	
+	static final int sleepDuration = 40;
 	
 	static ServiceTracker<AicasTxtDriverInterface, AicasTxtDriverInterface> driverServiceTracker;
 
