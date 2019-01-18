@@ -121,12 +121,12 @@ public class ObjectWorkerThread implements Runnable
         
         int cnt;
 
-        // periodic check and sleep ... same story as above
+        // periodic check and sleep. same story as above but with 40 ms (motor counter update frequency) 
         while ((cnt = driverService.getMotorCounter()) < colorSampleRegionIn)
         {
             try
             {                
-                Thread.sleep(100);
+                Thread.sleep(40);
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
@@ -146,11 +146,8 @@ public class ObjectWorkerThread implements Runnable
         {
             int val = driverService.getColorSensorValue();
             System.out.println(String.format("%s color val = %d", name, val));            
-//            if ((out_cnt % 10) == 0)
-//                System.out.print(". ");
             colorSensorValue = (int) (val * SMOOTH_FACTOR + colorSensorValue * (1 - SMOOTH_FACTOR));
             System.out.println(String.format("%s colorSensorValue = %d", name, colorSensorValue));
-            // out_cnt++;
         }
         System.out.println();
         System.out.println(String.format("AicasRealtimeSorting: %s sampled color value %d", name,
@@ -178,7 +175,7 @@ public class ObjectWorkerThread implements Runnable
         {
             try
             {
-                Thread.sleep(100);
+                Thread.sleep(40);
             } catch (InterruptedException e)
             {
                 e.printStackTrace();

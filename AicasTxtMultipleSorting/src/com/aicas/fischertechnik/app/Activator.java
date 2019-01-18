@@ -224,6 +224,8 @@ public class Activator implements BundleActivator
         driverService.stopMotor(1);
 
         driverService.stopCompressor();
+        
+        // TODO: add a server for the outer thread with 10 % bandwidth 
 
         /**
          * The outer thread basically samples the first light barrier for incoming objects.
