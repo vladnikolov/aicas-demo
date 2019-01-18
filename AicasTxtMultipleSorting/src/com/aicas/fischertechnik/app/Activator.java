@@ -106,6 +106,11 @@ public class Activator implements BundleActivator
          * However, we expect that workers will occasionally block preserving a fifo exec order on the shared priority level.
          * Note that cost < period is assumed, otherwise one server could over-utilize the whole system CPU resources.
          * All worker threads execute at the same FIFO priority level, while the outer thread operates one level above.
+         * 
+         * Priority Distribution:
+         * Max - 1: Driver / Motor Counter Periodic Thread
+         * Max - 2: outer thread / sampling for incoming objects
+         * Max - 3: all Worker Threads
          */
 
         // capacity for the RT workers  
