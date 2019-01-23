@@ -36,8 +36,8 @@ public class Activator implements BundleActivator
 
     static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
 
-    static MultiUserChat multiUserChat;
-    AbstractXMPPConnection connection;
+//    static MultiUserChat multiUserChat;
+//    AbstractXMPPConnection connection;
 
     // actually we do not need a service tracker customizer
 
@@ -193,10 +193,10 @@ public class Activator implements BundleActivator
     {
         Activator.context = bundleContext;
 
-        connection = XMPPClient.connect("colorsortingguisender", "password");
-        MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
-        multiUserChat = multiUserChatManager.getMultiUserChat("muc@conference.es-0226.aicas.burg");
-        multiUserChat.createOrJoin("sender");
+//        connection = XMPPClient.connect("colorsortingguisender", "password");
+//        MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
+//        multiUserChat = multiUserChatManager.getMultiUserChat("muc@conference.es-0226.aicas.burg");
+//        multiUserChat.createOrJoin("sender");
 
         sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
         (bundleContext, AicasTxtSortingLogic.class, null);
@@ -319,8 +319,9 @@ public class Activator implements BundleActivator
             aperiodicExecutor.shutdown();
             aperiodicExecutor.awaitTermination(7, TimeUnit.SECONDS);
         }
+        
         // sortingServiceTracker.close();
-        connection.disconnect();
+        // connection.disconnect();
     }
 
 }

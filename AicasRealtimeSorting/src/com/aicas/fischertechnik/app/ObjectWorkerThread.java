@@ -1,14 +1,7 @@
 package com.aicas.fischertechnik.app;
 
-import javax.realtime.PeriodicParameters;
-import javax.realtime.ProcessingGroupParameters;
-import javax.realtime.RealtimeThread;
-import javax.xml.crypto.dsig.keyinfo.PGPData;
-
 import org.jivesoftware.smack.SmackException.NotConnectedException;
-import org.osgi.framework.ServiceReference;
 
-import com.aicas.fischertechnik.app.Activator.AperiodicWorkerExecutor;
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic.DetectedColor;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
@@ -78,15 +71,15 @@ public class ObjectWorkerThread implements Runnable
         {
             driverService.rotateMotor(1, 1, 512, 0);
             motorStarted = true;
-            try
-            {
-                Activator.multiUserChat.sendMessage("Motor.Rotating : true");
-                Activator.multiUserChat.sendMessage("Motor.Direction : 1");
-                Activator.multiUserChat.sendMessage("Motor.Speed : 512");
-                Activator.multiUserChat.sendMessage("Motor.Counter : " + initialMotorCounter);
-            } catch (NotConnectedException e)
-            {
-            }
+//            try
+//            {
+//                Activator.multiUserChat.sendMessage("Motor.Rotating : true");
+//                Activator.multiUserChat.sendMessage("Motor.Direction : 1");
+//                Activator.multiUserChat.sendMessage("Motor.Speed : 512");
+//                Activator.multiUserChat.sendMessage("Motor.Counter : " + initialMotorCounter);
+//            } catch (NotConnectedException e)
+//            {
+//            }
         }
 
         // wait until the object left out of the first light barrier!
@@ -263,15 +256,15 @@ public class ObjectWorkerThread implements Runnable
             {
                 driverService.stopMotor(1);
                 motorStarted = false;
-                try
-                {
-                    Activator.multiUserChat.sendMessage("Motor.Rotating : false");
-                    Activator.multiUserChat.sendMessage("Motor.Direction : 0");
-                    Activator.multiUserChat.sendMessage("Motor.Speed : 0");
-                    Activator.multiUserChat.sendMessage("Motor.Counter : " + driverService.getMotorCounter());
-                } catch (NotConnectedException e) {
-                    e.printStackTrace();
-                }
+//                try
+//                {
+//                    Activator.multiUserChat.sendMessage("Motor.Rotating : false");
+//                    Activator.multiUserChat.sendMessage("Motor.Direction : 0");
+//                    Activator.multiUserChat.sendMessage("Motor.Speed : 0");
+//                    Activator.multiUserChat.sendMessage("Motor.Counter : " + driverService.getMotorCounter());
+//                } catch (NotConnectedException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
         
