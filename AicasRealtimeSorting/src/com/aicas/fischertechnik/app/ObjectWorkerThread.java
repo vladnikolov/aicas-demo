@@ -1,7 +1,5 @@
 package com.aicas.fischertechnik.app;
 
-import org.jivesoftware.smack.SmackException.NotConnectedException;
-
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic.DetectedColor;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;

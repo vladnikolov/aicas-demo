@@ -5,7 +5,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import javax.realtime.AbsoluteTime;
 import javax.realtime.AperiodicParameters;
+import javax.realtime.Clock;
 import javax.realtime.PeriodicParameters;
 import javax.realtime.PriorityParameters;
 import javax.realtime.PriorityScheduler;
@@ -13,9 +15,6 @@ import javax.realtime.ProcessingGroupParameters;
 import javax.realtime.RealtimeThread;
 import javax.realtime.RelativeTime;
 
-import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -35,53 +34,6 @@ public class Activator implements BundleActivator
     AicasTxtDriverInterface driverService;
 
     static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
-
-//    static MultiUserChat multiUserChat;
-//    AbstractXMPPConnection connection;
-
-    // actually we do not need a service tracker customizer
-
-    //        ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceCustomizer = 
-    //                new ServiceTrackerCustomizer<AicasTxtSortingLogic, AicasTxtSortingLogic>() {
-    //    
-    //                    @Override
-    //                    public AicasTxtSortingLogic addingService(ServiceReference<AicasTxtSortingLogic> reference)
-    //                    {
-    //                        @SuppressWarnings("unchecked")
-    //                        AicasTxtSortingLogic result = (AicasTxtSortingLogic) context.getService(reference);
-    //                        return result;
-    //                    }
-    //    
-    //                    @Override
-    //                    public void modifiedService(ServiceReference<AicasTxtSortingLogic> reference,
-    //                            AicasTxtSortingLogic service)
-    //                    {
-    //                        // TODO Auto-generated method stub
-    //                        
-    //                    }
-    //    
-    //                    @Override
-    //                    public void removedService(ServiceReference<AicasTxtSortingLogic> reference,
-    //                            AicasTxtSortingLogic service)
-    //                    {
-    //                        context.ungetService(reference);
-    //                    }
-    //                    
-    //                };
-
-    // ExecutorService executorService = Executors.newFixedThreadPool(7);
-
-    //    ExecutorService executorService = Executors.newFixedThreadPool(7, new ThreadFactory()
-    //    {        
-    //        @Override
-    //        public Thread newThread(Runnable r)
-    //        {
-    //            PriorityParameters priority = new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3);
-    //            AperiodicParameters aperiodic = new AperiodicParameters(); //can be customized with cost, deadline and handlers
-    //            RealtimeThread rt = new RealtimeThread(priority, aperiodic, null, null, null, r);
-    //            return rt;
-    //        }
-    //    });    
 
     // Provide a custom ThreadPoolExecutor for RT object worker threads 
     // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ThreadPoolExecutor.html
@@ -193,11 +145,6 @@ public class Activator implements BundleActivator
     {
         Activator.context = bundleContext;
 
-//        connection = XMPPClient.connect("colorsortingguisender", "password");
-//        MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
-//        multiUserChat = multiUserChatManager.getMultiUserChat("muc@conference.es-0226.aicas.burg");
-//        multiUserChat.createOrJoin("sender");
-
         sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
         (bundleContext, AicasTxtSortingLogic.class, null);
 
@@ -227,6 +174,8 @@ public class Activator implements BundleActivator
         
         // TODO: add a server for the outer thread with 10 % bandwidth 
 
+        AbsoluteTime startTime = Clock.getRealtimeClock().getTime().add(1000, 0);
+        
         /**
          * The outer thread basically samples the first light barrier for incoming objects.
          * If a new object is detected, then the outer thread uses the executor to trigger further processing.
@@ -236,8 +185,12 @@ public class Activator implements BundleActivator
                 // the outer thread priority must be higher as of the workers, since it creates workers
                 new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 2), 
                 // set a proper outer thread period (4-time a second might be sufficient)
-                new PeriodicParameters(new RelativeTime(250, 0))) {
-
+                new PeriodicParameters(startTime, new RelativeTime(250, 0)),
+                null,
+                null,
+                new ProcessingGroupParameters(startTime, new RelativeTime(250, 0), new RelativeTime(50, 0), null, null, null),
+                null) {
+            
             boolean newObjectDetected = false;
 
             public void run()
