@@ -5,17 +5,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import javax.realtime.AperiodicParameters;
 import javax.realtime.PeriodicParameters;
 import javax.realtime.PriorityParameters;
 import javax.realtime.PriorityScheduler;
-import javax.realtime.ProcessingGroupParameters;
 import javax.realtime.RealtimeThread;
 import javax.realtime.RelativeTime;
 
-import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smackx.muc.MultiUserChat;
-import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -35,9 +30,6 @@ public class Activator implements BundleActivator
     AicasTxtDriverInterface driverService;
 
     static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
-
-//    static MultiUserChat multiUserChat;
-//    AbstractXMPPConnection connection;
 
     // actually we do not need a service tracker customizer
 
@@ -67,21 +59,7 @@ public class Activator implements BundleActivator
     //                        context.ungetService(reference);
     //                    }
     //                    
-    //                };
-
-    // ExecutorService executorService = Executors.newFixedThreadPool(7);
-
-    //    ExecutorService executorService = Executors.newFixedThreadPool(7, new ThreadFactory()
-    //    {        
-    //        @Override
-    //        public Thread newThread(Runnable r)
-    //        {
-    //            PriorityParameters priority = new PriorityParameters(PriorityScheduler.instance().getMaxPriority() - 3);
-    //            AperiodicParameters aperiodic = new AperiodicParameters(); //can be customized with cost, deadline and handlers
-    //            RealtimeThread rt = new RealtimeThread(priority, aperiodic, null, null, null, r);
-    //            return rt;
-    //        }
-    //    });    
+    //                };   
 
     // Provide a custom ThreadPoolExecutor for RT object worker threads 
     // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ThreadPoolExecutor.html
@@ -113,24 +91,7 @@ public class Activator implements BundleActivator
          * Max - 3: all Worker Threads
          */
 
-        // capacity for the RT workers  
-        short rtCapacityInPercent = 70;
-
-        // a common server period for all workers
-        public static final int pgpPeriod = 500;
-
-        // the overall available CPU capacity for the workers
-        int overallCapacity = (pgpPeriod * rtCapacityInPercent) / 100 ; 
-
-        /**
-         * Note: the overall RT workers budget is equally divided between the maximum in parallel allowed workers
-         * The following model applies: e.g. for gpPeriod = 500 ms => overallCapacity = 350 ms
-         * for poolMaxSize = 7 => pgpCosts = 50 ms => 10 % of system CPU bandwidth per worker 
-         */
-         
-        int pgpCosts = overallCapacity / poolMaxSize;
-
-        int workersPriority = PriorityScheduler.instance().getMaxPriority() - 3;
+        int workersPriority = PriorityScheduler.instance().getMinPriority();
 
         public AperiodicWorkerExecutor()
         {
@@ -141,14 +102,9 @@ public class Activator implements BundleActivator
                 @Override
                 public Thread newThread(Runnable r)
                 {
-                    PriorityParameters priority = new PriorityParameters(workersPriority);
-                    // aperiodic can be further customized with cost, deadline and handlers
-                    AperiodicParameters aperiodic = new AperiodicParameters();                    
-                    // assign a separate PGP instancefor each worker with proper budget and replenishment period 
-                    ProcessingGroupParameters pgp = 
-                            new ProcessingGroupParameters(null, new RelativeTime(pgpPeriod, 0), new RelativeTime() , null, null, null);
-                    RealtimeThread rt = new RealtimeThread(priority, aperiodic, null, null, pgp, r);
-                    return rt;
+                    Thread t = new Thread(r);
+                    t.setPriority(workersPriority);
+                    return t;
                 }
             };
 
@@ -192,11 +148,6 @@ public class Activator implements BundleActivator
     public void start(BundleContext bundleContext) throws Exception
     {
         Activator.context = bundleContext;
-
-//        connection = XMPPClient.connect("colorsortingguisender", "password");
-//        MultiUserChatManager multiUserChatManager = MultiUserChatManager.getInstanceFor(connection);
-//        multiUserChat = multiUserChatManager.getMultiUserChat("muc@conference.es-0226.aicas.burg");
-//        multiUserChat.createOrJoin("sender");
 
         sortingServiceTracker = new ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic>
         (bundleContext, AicasTxtSortingLogic.class, null);

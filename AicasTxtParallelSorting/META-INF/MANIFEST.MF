@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: AicasRealtimeSorting
-Bundle-SymbolicName: AicasRealtimeSorting
+Bundle-SymbolicName: AicasParallelSorting
 Bundle-Version: 1.0.0
 Bundle-Activator: com.aicas.fischertechnik.app.Activator
 Import-Package: 

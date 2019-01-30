@@ -1,4 +1,4 @@
-<project name="AicasRealtimeSorting" default="jar" basedir=".">
+<project name="AicasParallelSorting" default="jar" basedir=".">
 
 	<property name="src" location="src" />
 	<property name="build" location="bin" />
