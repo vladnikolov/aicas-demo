@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: AicasTxtSortingLogic
 Bundle-SymbolicName: AicasTxtSortingLogic
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.0.0
 Bundle-Activator: com.aicas.fischertechnik.app.Activator
 Automatic-Module-Name: AicasTxtSortingLogic
 Import-Package: org.osgi.framework;version="1.3.0", 
