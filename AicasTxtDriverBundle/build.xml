@@ -8,11 +8,13 @@
 	<property name="osgi-api" location="../osgi-core/osgi.core-6.0.0.jar" />
 	<property name="version" value="1.0.0" />
 	<property name="dependency-path" value="../AicasTxtDriverBundle/bin" />
+	<property name="dependency-connector-api" value="../StatusConnectorAPI/bin" />
 
 	<path id="project.class.path">
 		<pathelement path="${rt.class.path}" />
 		<pathelement path="${osgi-api}"/>
 		<pathelement path="${dependency-path}"/>
+		<pathelement path="${dependency-connector-api}"/>
 		<!-- <pathelement path="${my.class.path}" /> -->
 	</path>
 

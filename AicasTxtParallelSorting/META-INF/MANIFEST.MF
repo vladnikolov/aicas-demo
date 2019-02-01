@@ -10,9 +10,5 @@ Import-Package:
     com.aicas.fischertechnik.driver, 
     com.aicas.fischertechnik.app.sorting,
     org.osgi.util.tracker,
-    org.jivesoftware.smack,
-    org.jivesoftware.smack.packet,
-    org.jivesoftware.smackx.muc,
-    org.jivesoftware.smack.tcp
-Export-Package: com.aicas.fischertechnik.app.monitoring
+    com.aicas.fischertechnik.app.monitoring
 Automatic-Module-Name: AicasRealtimeSorting

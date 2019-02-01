@@ -21,12 +21,17 @@ public class ModbusStatusConnector implements StatusConnector
         {
             spi = new SimpleProcessImage(MODBUS_UNIT_ID);
 
-            spi.addRegister(new SimpleRegister(1)); // STATUS_LIGHT_BARRIER_COLORSENSOR
-            spi.addRegister(new SimpleRegister(2)); // STATUS_LIGHT_BARRIER_EJECTION
-            spi.addRegister(new SimpleRegister(3)); // STATUS_MOTOR
-            spi.addRegister(new SimpleRegister(4)); // STATUS_COMPRESSOR
-            spi.addRegister(new SimpleRegister(5)); // OBJECT_ON_TRACK
-            spi.addRegister(new SimpleRegister(6)); // ERROR
+            spi.addRegister(new SimpleRegister(0)); // STATUS_LIGHT_BARRIER_COLORSENSOR
+            spi.addRegister(new SimpleRegister(1)); // STATUS_LIGHT_BARRIER_EJECTION
+            spi.addRegister(new SimpleRegister(2)); // STATUS_MOTOR
+            spi.addRegister(new SimpleRegister(3)); // STATUS_COMPRESSOR
+            spi.addRegister(new SimpleRegister(4)); // OBJECT_ON_TRACK
+            spi.addRegister(new SimpleRegister(5)); // ERROR
+            spi.addRegister(new SimpleRegister(6)); // MOTOR_COUNTER
+            spi.addRegister(new SimpleRegister(7)); // DETECTED_COLOR
+            spi.addRegister(new SimpleRegister(8)); // STATUS_VALVE_WHITE
+            spi.addRegister(new SimpleRegister(9)); // STATUS_VALVE_RED
+            spi.addRegister(new SimpleRegister(10)); // STATUS_VALVE_BLUE
 
             System.out.println("Modbus Slave listening: " + MODBUS_SLAVE_PORT);
             slave = ModbusSlaveFactory.createTCPSlave(MODBUS_SLAVE_PORT,

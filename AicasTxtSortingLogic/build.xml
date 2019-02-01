@@ -9,12 +9,14 @@
 	<property name="version" value="1.0.0" />
 	<property name="dependency-driver" value="../AicasTxtDriverBundle/bin" />
 	<property name="dependency-sorting-api" value="../AicasTxtSortingAPI/bin" />
+	<property name="dependency-connector-api" value="../StatusConnectorAPI/bin" />
 
 	<path id="project.class.path">
 		<pathelement path="${rt.class.path}" />
 		<pathelement path="${osgi-api}"/>
 		<pathelement path="${dependency-driver}"/>
 		<pathelement path="${dependency-sorting-api}"/>
+		<pathelement path="${dependency-connector-api}"/>
 		<!-- <pathelement path="${my.class.path}" /> -->
 	</path>
 

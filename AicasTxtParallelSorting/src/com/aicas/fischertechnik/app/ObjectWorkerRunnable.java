@@ -6,53 +6,48 @@ import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic.DetectedColor;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
 
-// TODO: set-up RR scheduling for the worker threads
-// TODO: measure the pure cpu costs of the workers and their wall execution time 
-//       use costs for feasibility analysis - how much workers are possible in parallel at all ?
-// TODO: bind each thread to a processing group, with replenishing period 500 ms and interpolated costs for that.
-
 public class ObjectWorkerRunnable implements Runnable
 {
     public int initialMotorCounter;
     public String name;
     public AicasTxtDriverInterface driverService;
     public StatusConnector statusConnector;
-    
+
     int motorCounter;
 
     static volatile boolean motorStarted = false;
     static volatile boolean compressorActivated = false;
     static volatile int activeWorkers = 0;
-    
+
     static final int DISTANCE_SAMPLING_REGION_START = 8;
     static final int DISTANCE_SAMPLING_REGION_END = 9;
-    
+
     static final int DISTANCE_LIGHT_BARRIER_EJECTION= 14;
     static final int DISTANCE_VALVE_WHITE = 18;
     static final int DISTANCE_VALVE_RED = 24;
     static final int DISTANCE_VALVE_BLUE = 29;
-    
+
 
     static final int COLOR_THRESHOLD_WHITE = 1100; // 1390
     static final int COLOR_THRESHOLD_RED = 1500;   // 1600
     static final int COLOR_THRESHOLD_BLUE = 1800;
 
     static final double SMOOTH_FACTOR = 0.5;
-    
+
     AicasTxtSortingLogic sortingLogic;
 
     @Override
     public void run()
     {
         activeWorkers++;
-        statusConnector.sendStatus(StatusConnector.OBJECT_ON_TRACK, activeWorkers);
-        
+        statusConnector.sendStatus(StatusConnector.OBJECTS_ON_TRACK, activeWorkers);
+
         System.out.println(String.format("AicasRealtimeSorting: %s new object detected!", name));
         System.out.println(String.format("AicasRealtimeSorting: %s initial motor counter is = %d", name,
-                initialMotorCounter)); 
-        
+                initialMotorCounter));
+
         sortingLogic = Activator.sortingServiceTracker.getService();
-        
+
         // activate the motor of the supply line
         if (!motorStarted)
         {
@@ -62,21 +57,21 @@ public class ObjectWorkerRunnable implements Runnable
         }
 
         // wait until the object left out of the first light barrier!
-        // Note: here we use periodic check and sleep ... 
+        // Note: here we use periodic check and sleep ...
         while (!driverService.getLightBarrierState(LightBarrier.COLORSENSOR))
         {
             try
             {
-                // give up control for some time               
+                // give up control for some time
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             continue;
         }
-        
+
         statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_COLORSENSOR, 1);
-        
+
         System.out.println(
                 String.format("AicasRealtimeSorting: %s left first light barrier with motor counter = %d",
                         name, driverService.getMotorCounter()));
@@ -88,21 +83,21 @@ public class ObjectWorkerRunnable implements Runnable
 
         int colorSampleRegionIn = initialMotorCounter + DISTANCE_SAMPLING_REGION_START;
         int colorSampleRegionOut = initialMotorCounter + DISTANCE_SAMPLING_REGION_END;
-        
+
         int cnt;
 
-        // periodic check and sleep. same story as above but with 40 ms (motor counter update frequency) 
+        // periodic check and sleep. same story as above but with 40 ms (motor counter update frequency)
         while ((cnt = driverService.getMotorCounter()) < colorSampleRegionIn)
         {
             try
-            {                
+            {
                 Thread.sleep(40);
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
             }
             continue;
-        }      
+        }
 
         // we are in the color sampling region - measure an exponentially smoothed object color value
 
@@ -115,7 +110,7 @@ public class ObjectWorkerRunnable implements Runnable
         while (driverService.getMotorCounter() < colorSampleRegionOut)
         {
             int val = driverService.getColorSensorValue();
-            System.out.println(String.format("%s color val = %d", name, val));            
+            System.out.println(String.format("%s color val = %d", name, val));
             colorSensorValue = (int) (val * SMOOTH_FACTOR + colorSensorValue * (1 - SMOOTH_FACTOR));
             System.out.println(String.format("%s colorSensorValue = %d", name, colorSensorValue));
         }
@@ -124,16 +119,16 @@ public class ObjectWorkerRunnable implements Runnable
                 colorSensorValue));
 
         statusConnector.sendStatus(StatusConnector.DETECTED_COLOR, colorSensorValue);
-        
-        // decide whether the object is white, red or blue        
+
+        // decide whether the object is white, red or blue
         if (colorSensorValue < COLOR_THRESHOLD_WHITE)
         {
             detectedColor = DetectedColor.WHITE;
-        } 
+        }
         else if (colorSensorValue < COLOR_THRESHOLD_RED)
         {
             detectedColor = DetectedColor.RED;
-        } 
+        }
         else
         {
             detectedColor = DetectedColor.BLUE;
@@ -151,11 +146,11 @@ public class ObjectWorkerRunnable implements Runnable
             } catch (InterruptedException e)
             {
                 e.printStackTrace();
-            } 
+            }
             continue;
-        }       
-        
-        // periodic check and sleep - wait until the object crosses the ejection light barrier 
+        }
+
+        // periodic check and sleep - wait until the object crosses the ejection light barrier
         while (driverService.getLightBarrierState(LightBarrier.EJECTION))
         {
             try
@@ -167,14 +162,14 @@ public class ObjectWorkerRunnable implements Runnable
             }
             continue;
         }
-        
+
 //        System.out.println(String.format("AicasRealtimeSorting: %s crossed EJECTION barrier with motor counter = %d",
 //                name, driverService.getMotorCounter()));
-        
+
         statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_EJECTION, 0);
 
         System.out.println(String.format("AicasRealtimeSorting: %s preparing ejection for %s", name, detectedColor));
-        
+
         // in the mean time activate the compressor
         if (!compressorActivated)
         {
@@ -196,18 +191,18 @@ public class ObjectWorkerRunnable implements Runnable
             }
             continue;
         }
-        
+
         statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_EJECTION, 0);
 
         // get the actual motor counter to compute the distance to the according ejection valve
         motorCounter = driverService.getMotorCounter();
 
-        System.out.println(String.format("AicasRealtimeSorting: %s activating valve %s ", name, detectedColor));         
-        
+        System.out.println(String.format("AicasRealtimeSorting: %s activating valve %s ", name, detectedColor));
+
         if(sortingLogic == null) {
             sortingLogic = Activator.sortingServiceTracker.getService();
         }
-        
+
         if (sortingLogic != null) {
             try
             {
@@ -219,12 +214,12 @@ public class ObjectWorkerRunnable implements Runnable
         } else {
             System.out.println(String.format("AicasTxtStandardSortingLogic: %s no sorting service found", name));
             System.out.println(String.format("AicasTxtStandardSortingLogic: %s skipping sorting !", name));
-        }        
+        }
 
         activeWorkers--;
-        
-        statusConnector.sendStatus(StatusConnector.OBJECT_ON_TRACK, activeWorkers);
-        
+
+        statusConnector.sendStatus(StatusConnector.OBJECTS_ON_TRACK, activeWorkers);
+
         // from here on we do not have to be time-lined
 
         // if this was the last object switch off compressor and motor
@@ -246,7 +241,7 @@ public class ObjectWorkerRunnable implements Runnable
                 statusConnector.sendStatus(StatusConnector.STATUS_MOTOR, 0);
             }
         }
-        
+
         System.out.println(String.format("AicasParallelSorting: %s ready !\n\n\n", name));
     }
 }
