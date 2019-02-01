@@ -217,6 +217,9 @@ public class Activator implements BundleActivator
         statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_EJECTION, 1);
         statusConnector.sendStatus(StatusConnector.MOTOR_COUNTER, driverService.getMotorCounter());
         statusConnector.sendStatus(StatusConnector.DETECTED_COLOR, 0);
+        statusConnector.sendStatus(StatusConnector.STATUS_VALVE_WHITE, 0);
+        statusConnector.sendStatus(StatusConnector.STATUS_VALVE_RED, 0);
+        statusConnector.sendStatus(StatusConnector.STATUS_VALVE_BLUE, 0);
 
         while (run)
         {
