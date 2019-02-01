@@ -5,12 +5,15 @@ package com.aicas.fischertechnik.app.monitoring;
 
 public interface StatusConnector
 {
-    static final int STATUS_LIGHT_BARRIER_COLORSENSOR = 1;
-    static final int STATUS_LIGHT_BARRIER_EJECTION = 2;
-    static final int STATUS_MOTOR = 3;
-    static final int STATUS_COMPRESSOR = 4;
-    static final int OBJECT_ON_TRACK = 5;
-    static final int ERROR = 6;
+    static final int STATUS_LIGHT_BARRIER_COLORSENSOR = 0;
+    static final int STATUS_LIGHT_BARRIER_EJECTION = 1;
+    static final int STATUS_MOTOR = 2;
+    static final int STATUS_COMPRESSOR = 3;
+    static final int OBJECT_ON_TRACK = 4;
+    static final int ERROR = 5;
+    static final int MOTOR_COUNTER = 6;
+    static final int DETECTED_COLOR = 7;
+    
 //  not used now
 //  static final int STATUS_LIGHT_BARRIER_WHITE = 7;
 //  static final int STATUS_LIGHT_BARRIER_RED = 8;

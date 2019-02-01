@@ -7,3 +7,4 @@ Automatic-Module-Name: ModbusStatusConnectorService
 Import-Package: org.osgi.framework;version="1.3.0", 
     com.aicas.fischertechnik.app.monitoring
 Bundle-Activator: com.aicas.fischertechnik.app.Activator
+Bundle-ClassPath: .,j2mod-2.5.1.jar,slf4j-api-1.7.21.jar,slf4j-nop-1.7.21.jar

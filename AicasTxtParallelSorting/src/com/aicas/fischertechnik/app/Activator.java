@@ -16,6 +16,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.aicas.fischertechnik.app.monitoring.StatusConnector;
 import com.aicas.fischertechnik.app.sorting.AicasTxtSortingLogic;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface;
 import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
@@ -23,11 +24,11 @@ import com.aicas.fischertechnik.driver.AicasTxtDriverInterface.LightBarrier;
 public class Activator implements BundleActivator
 {
 
-    static BundleContext context;
-
-    ServiceReference<AicasTxtDriverInterface> driverServiceRef;
+    static BundleContext context;    
 
     AicasTxtDriverInterface driverService;
+    
+    StatusConnector statusConnector;
 
     static ServiceTracker<AicasTxtSortingLogic, AicasTxtSortingLogic> sortingServiceTracker;
 
@@ -166,7 +167,10 @@ public class Activator implements BundleActivator
 
         System.out.println("AicasRealtimeSorting: querying TXT driver service");
 
-        driverServiceRef = context.getServiceReference(AicasTxtDriverInterface.class);
+        ServiceReference<AicasTxtDriverInterface> driverServiceRef = 
+                context.getServiceReference(AicasTxtDriverInterface.class);
+        
+        if (driverServiceRef == null) throw new RuntimeException("no TXT driver service found");
 
         driverService = context.getService(driverServiceRef);
 
@@ -175,6 +179,13 @@ public class Activator implements BundleActivator
         driverService.stopMotor(1);
 
         driverService.stopCompressor();
+        
+        ServiceReference<StatusConnector> statusConnectorServiceRef = 
+                context.getServiceReference(StatusConnector.class);
+        
+        if (statusConnectorServiceRef == null) throw new RuntimeException("no status connector service found");
+        
+        statusConnector = context.getService(statusConnectorServiceRef);
         
         // TODO: add a server for the outer thread with 10 % bandwidth 
 
@@ -194,7 +205,16 @@ public class Activator implements BundleActivator
             public void run()
             {
                 System.out.println("AicasRealtimeSorting: waiting for new object ...");
-
+                
+                statusConnector.sendStatus(StatusConnector.ERROR, 0);
+                statusConnector.sendStatus(StatusConnector.OBJECT_ON_TRACK, 0);
+                statusConnector.sendStatus(StatusConnector.STATUS_COMPRESSOR, 0);
+                statusConnector.sendStatus(StatusConnector.STATUS_MOTOR, 0);
+                statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_COLORSENSOR, 1);
+                statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_EJECTION, 1);
+                statusConnector.sendStatus(StatusConnector.MOTOR_COUNTER, driverService.getMotorCounter());
+                statusConnector.sendStatus(StatusConnector.DETECTED_COLOR, 0);
+                
                 while (run)
                 {
                     try
@@ -207,6 +227,7 @@ public class Activator implements BundleActivator
                             if(newObjectDetected) {
                                 // it just left the color sensor barrier
                                 newObjectDetected = false;
+                                statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_COLORSENSOR, 1);
                             } else {
                                 // there is no object, just skip any action
                             }
@@ -219,15 +240,16 @@ public class Activator implements BundleActivator
                             } else {
                                 // we just detected a new object                                
                                 newObjectDetected = true;
-
-                                // Activator.multiUserChat.sendMessage("LightBarrier.ColorSensor : true");
+                                
+                                statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_COLORSENSOR, 0);
 
                                 motorCounter = driverService.getMotorCounter();
-                                ObjectWorkerThread workerRunnable = new ObjectWorkerThread();
+                                ObjectWorkerRunnable workerRunnable = new ObjectWorkerRunnable();
                                 workerRunnable.initialMotorCounter = motorCounter;
                                 // TODO: all workers use the same service instance - is it thread safe?  
                                 workerRunnable.driverService = driverService;
                                 workerRunnable.name = "WorkerThread-" + ++workerThreadCounter;
+                                workerRunnable.statusConnector = statusConnector;
 
                                 // if we reached poolMaxSize of objects we can not process this object
                                 if(aperiodicExecutor.getActiveCount() == aperiodicExecutor.getMaximumPoolSize()) {
