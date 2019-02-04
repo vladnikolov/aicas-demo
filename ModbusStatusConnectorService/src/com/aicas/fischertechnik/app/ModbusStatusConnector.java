@@ -16,6 +16,7 @@ public class ModbusStatusConnector implements StatusConnector
     static final int MODBUS_SLAVE_PORT = 12345;
     static final int MODBUS_SLAVE_POOL_SIZE = 5;
 
+    @Override
     public boolean initialize() {
         try
         {
@@ -48,6 +49,7 @@ public class ModbusStatusConnector implements StatusConnector
         return true;
     }
 
+    @Override
     public void uninitialize() {
         slave.close();
     }

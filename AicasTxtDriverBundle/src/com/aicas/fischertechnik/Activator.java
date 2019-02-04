@@ -26,6 +26,7 @@ public class Activator implements BundleActivator {
   }
 
   boolean run = true;
+  StatusConnector statusConnector;
 
   /*
    * (non-Javadoc)
@@ -43,7 +44,7 @@ public class Activator implements BundleActivator {
       (bundleContext, StatusConnector.class, null);
     statusConnectorTracker.open();
 
-    StatusConnector statusConnector = statusConnectorTracker.getService();
+    statusConnector = statusConnectorTracker.getService();
 
     RealtimeThread counterThread = new RealtimeThread(
         new PriorityParameters(PriorityScheduler.MAX_PRIORITY -1),

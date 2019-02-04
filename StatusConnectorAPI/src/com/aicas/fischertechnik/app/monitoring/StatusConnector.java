@@ -23,4 +23,6 @@ public interface StatusConnector
 //  static final int STATUS_LIGHT_BARRIER_BLUE = 9;
 
     boolean sendStatus(int id, int value);
+    boolean initialize();
+    void uninitialize();
 }
