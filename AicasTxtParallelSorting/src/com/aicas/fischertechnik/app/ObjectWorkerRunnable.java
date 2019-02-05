@@ -192,7 +192,7 @@ public class ObjectWorkerRunnable implements Runnable
             continue;
         }
 
-        statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_EJECTION, 0);
+        statusConnector.sendStatus(StatusConnector.STATUS_LIGHT_BARRIER_EJECTION, 1);
 
         // get the actual motor counter to compute the distance to the according ejection valve
         motorCounter = driverService.getMotorCounter();
