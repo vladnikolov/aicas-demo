@@ -53,7 +53,7 @@ public class ObjectWorkerRunnable implements Runnable
         {
             driverService.rotateMotor(1, 1, 512, 0);
             motorStarted = true;
-            statusConnector.sendStatus(StatusConnector.STATUS_MOTOR, 0);
+            statusConnector.sendStatus(StatusConnector.STATUS_MOTOR, 1);
         }
 
         // wait until the object left out of the first light barrier!
