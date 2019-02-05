@@ -1,6 +1,7 @@
 package com.aicas.fischertechnik.app;
 
 import com.aicas.fischertechnik.app.monitoring.StatusConnector;
+import com.ghgande.j2mod.modbus.procimg.Register;
 import com.ghgande.j2mod.modbus.procimg.SimpleProcessImage;
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister;
 import com.ghgande.j2mod.modbus.slave.ModbusSlave;
@@ -57,8 +58,10 @@ public class ModbusStatusConnector implements StatusConnector
     @Override
     public synchronized boolean sendStatus(int id, int value)
     {
-        slave.getProcessImage(MODBUS_UNIT_ID).getRegister(id).setValue(value);
-        return true;
+        // slave.getProcessImage(MODBUS_UNIT_ID).getRegister(id).setValue(value);
+      Register register = spi.getRegister(id);
+      register.setValue(value);
+      return true;
     }
 
 }
