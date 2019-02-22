@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="lib/jxmpp-core-0.4.2.jar"/>
+	<classpathentry kind="lib" path="lib/jxmpp-util-cache-0.4.2.jar"/>
+	<classpathentry kind="lib" path="lib/smack-core-4.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/smack-extensions-4.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/smack-im-4.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/smack-java7-4.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/smack-sasl-provided-4.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/smack-tcp-4.1.5.jar"/>
+	<classpathentry kind="lib" path="lib/xpp3-1.1.4c.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
