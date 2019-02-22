@@ -43,9 +43,9 @@ public class Activator implements BundleActivator {
 
 		statusConnectorTracker.open();
 
-		context.registerService(AicasTxtSortingLogic.class, new AicasTxtStandardSortingLogic(), null);
+		// context.registerService(AicasTxtSortingLogic.class, new AicasTxtStandardSortingLogic(), null);
 		// context.registerService(AicasTxtSortingLogic.class, new AicasTxtBWRSortingLogic(), null);
-		// context.registerService(AicasTxtSortingLogic.class, new AicasTxtRWBSortingLogic(), null);
+		context.registerService(AicasTxtSortingLogic.class, new AicasTxtRWBSortingLogic(), null);
 	}
 
 	/*
